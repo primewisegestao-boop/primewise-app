@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prime Wise Gestão - Ócullus e Cia</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; scroll-behavior: smooth; }
+        .tab-active { border-bottom: 3px solid #2563eb; color: #2563eb; }
+        .loader { border: 3px solid #f3f3f3; border-top: 3px solid #2563eb; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; display: none; margin: auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800">
+
+    <div id="login-screen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md text-center">
+            <h1 class="text-2xl font-bold text-slate-800 mb-1">Prime Wise Gestão</h1>
+            <p class="text-slate-500 text-sm mb-6">Acesso Restrito - Nuvem</p>
+            
+            <form id="form-login">
+                <input type="email" id="email" placeholder="Seu E-mail" required class="w-full p-3 mb-3 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="password" id="senha" placeholder="Sua Senha" required class="w-full p-3 mb-4 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
+                
+                <p id="login-error" class="text-red-500 text-sm mb-4 hidden">E-mail ou senha incorretos.</p>
+                
+                <button type="submit" id="btn-login" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg shadow-lg transition-all flex justify-center">
+                    <span id="login-text">Entrar no Sistema</span>
+                    <div id="login-loader" class="loader"></div>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div id="dashboard" class="hidden">
+        <nav class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+            <div class="max-w-6xl mx-auto px-4 flex justify-between items-center h-16">
+                <span class="font-bold text-blue-600 text-xl tracking-tight">ÓCULLUS E CIA.</span>
+                <div class="flex space-x-6 h-full items-center">
+                    <button id="btn-tab-diario" class="h-full px-2 tab-active font-medium transition-all">Lançar Dia</button>
+                    <button id="btn-tab-apuracao" class="h-full px-2 text-slate-500 font-medium transition-all">Apuração Mês</button>
+                    <button id="btn-logout" class="text-sm text-slate-400 hover:text-red-500 font-bold ml-4">Sair</button>
+                </div>
+            </div>
+        </nav>
+
+        <main class="max-w-6xl mx-auto p-4 md:p-8">
+            
+            <div id="aba-diario" class="space-y-6 max-w-lg mx-auto">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                    <h2 class="text-lg font-bold text-slate-800 mb-4">Lançar Vendas do Dia</h2>
+                    <form id="form-venda">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-semibold mb-1 text-slate-500 uppercase">Data da Venda</label>
+                                <input type="date" id="data-venda" required class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold mb-1 text-slate-500 uppercase">Valor Total (R$)</label>
+                                <input type="number" step="0.01" id="valor-venda" required placeholder="Ex: 1500.50" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg font-bold text-green-700 text-lg">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold mb-1 text-slate-500 uppercase">Produto Destaque (Opcional)</label>
+                                <input type="text" id="produto-venda" placeholder="Ex: Lente Multifocal" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                            </div>
+                            <button type="submit" id="btn-salvar-venda" class="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-md transition flex justify-center mt-4">
+                                <span id="salvar-text">Salvar no Banco de Dados</span>
+                                <div id="salvar-loader" class="loader"></div>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div id="aba-apuracao" class="hidden space-y-6">
+                
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="space-y-6">
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                            <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Parâmetros de Análise</h2>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-semibold mb-1 text-indigo-600">Mês de Referência (Filtro)</label>
+                                    <input type="month" id="filtro-mes" class="w-full p-2 bg-indigo-50 border border-indigo-200 rounded-lg font-bold text-indigo-900 cursor-pointer">
+                                </div>
+                                <hr class="border-slate-100">
+                                <div>
+                                    <label class="block text-xs font-semibold mb-1">Meta do Mês (R$)</label>
+                                    <input type="text" id="meta" value="R$ 40.000,00" class="w-full p-2 bg-slate-50 border rounded-lg font-bold text-blue-700">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold mb-1">% Comissão Base</label>
+                                    <input type="number" step="0.1" id="comissao-taxa" value="2.5" class="w-full p-2 bg-slate-50 border rounded-lg">
+                                </div>
+                                <button id="btn-recalcular" class="w-full py-2 bg-slate-800 text-white rounded-lg text-sm font-bold hover:bg-slate-700">Atualizar Painel</button>
+                            </div>
+                        </div>
+
+                        <div class="bg-blue-600 p-6 rounded-xl shadow-xl text-white">
+                            <h3 class="text-xs font-bold uppercase opacity-70" id="label-tendencia-box">Tendência de Venda</h3>
+                            <p id="res-tendencia" class="text-3xl font-bold my-1">R$ 0,00</p>
+                            <div class="pt-3 border-t border-blue-400 mt-3">
+                                <p class="text-xs opacity-80" id="box-comissao-proj">Comissão Prevista: <span id="res-comissao-proj" class="font-bold">R$ 0,00</span></p>
+                                <p class="text-xs opacity-80"><span id="texto-comissao-real">Comissão Atual:</span> <span id="res-comissao-real" class="font-bold">R$ 0,00</span></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-2 space-y-6">
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                            <div class="flex justify-between items-start mb-6">
+                                <div>
+                                    <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                                        Total Realizado: <span id="valor-realizado-nuvem" class="text-green-600">R$ 0,00</span>
+                                    </h2>
+                                    <p class="text-slate-500 text-sm">Soma das vendas no período selecionado</p>
+                                </div>
+                                <div class="text-right">
+                                    <span id="badge-status" class="px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-500">CARREGANDO...</span>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                                <div class="p-3 bg-slate-50 rounded-lg text-center">
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase">Dias Úteis</p>
+                                    <p id="dias-totais" class="text-lg font-bold">0</p>
+                                </div>
+                                <div class="p-3 bg-slate-50 rounded-lg text-center">
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase">Trabalhados</p>
+                                    <p id="dias-passados" class="text-lg font-bold text-blue-600">0</p>
+                                </div>
+                                <div class="p-3 bg-slate-50 rounded-lg text-center">
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase">Faltam</p>
+                                    <p id="dias-restantes" class="text-lg font-bold text-orange-600">0</p>
+                                </div>
+                                <div class="p-3 bg-slate-50 rounded-lg text-center">
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase">% Atingido</p>
+                                    <p id="perc-atingido" class="text-lg font-bold text-green-600">0%</p>
+                                </div>
+                            </div>
+                            <div class="relative h-4 bg-slate-100 rounded-full overflow-hidden mb-2">
+                                <div id="barra-progresso" class="absolute top-0 left-0 h-full bg-blue-500 transition-all duration-700" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <div id="ia-box" class="bg-indigo-50 border border-indigo-100 p-6 rounded-xl">
+                            <div class="flex items-center gap-2 mb-4">
+                                <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white">✨</div>
+                                <h3 class="font-bold text-indigo-900 italic">Análise Prime Wise</h3>
+                            </div>
+                            <ul id="dicas-lista" class="space-y-3 text-sm text-indigo-800">
+                                </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 mt-6">
+                    <div class="text-center mb-6">
+                        <h2 class="text-lg font-bold text-black mb-1">Performance Diária</h2>
+                        <p class="text-black font-bold text-sm">Comparativo de Vendas Totais vs. Comissão Gerada</p>
+                    </div>
+                    <div class="relative w-full h-80">
+                        <canvas id="graficoEvolucao"></canvas>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCF_5vgdURx3gtU3H3BIoXmVugx8oPjtLU",
+            authDomain: "primewisegestao-143bd.firebaseapp.com",
+            projectId: "primewisegestao-143bd",
+            storageBucket: "primewisegestao-143bd.firebasestorage.app",
+            messagingSenderId: "346472671919",
+            appId: "1:346472671919:web:29d03c3a3ebf8d2765c25a"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let usuarioAtual = null;
+        let totalRealizadoNuvem = 0;
+        let vendasPorDia = {}; 
+        let chartInstancia = null; 
+
+        const FERIADOS = [
+            "2026-01-01", "2026-04-03", "2026-04-21", "2026-05-01", 
+            "2026-09-07", "2026-10-11", "2026-10-12", "2026-11-02", 
+            "2026-11-15", "2026-11-20", "2026-12-25"
+        ];
+
+        document.getElementById('meta').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, ''); 
+            if (value === '') { e.target.value = ''; return; }
+            let result = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2 }).format(parseFloat(value) / 100);
+            e.target.value = 'R$ ' + result;
+        });
+
+        document.getElementById('filtro-mes').addEventListener('change', carregarDadosNuvem);
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                usuarioAtual = user;
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('dashboard').classList.remove('hidden');
+                
+                document.getElementById('data-venda').valueAsDate = new Date();
+                
+                const hoje = new Date();
+                const mesAtualFormatado = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
+                document.getElementById('filtro-mes').value = mesAtualFormatado;
+                
+                carregarDadosNuvem();
+            } else {
+                usuarioAtual = null;
+                document.getElementById('login-screen').classList.remove('hidden');
+                document.getElementById('dashboard').classList.add('hidden');
+            }
+        });
+
+        document.getElementById('form-login').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const senha = document.getElementById('senha').value;
+            
+            document.getElementById('login-text').classList.add('hidden');
+            document.getElementById('login-loader').style.display = 'block';
+            document.getElementById('login-error').classList.add('hidden');
+
+            try {
+                await signInWithEmailAndPassword(auth, email, senha);
+            } catch (error) {
+                document.getElementById('login-error').classList.remove('hidden');
+                console.error("Erro no login:", error);
+            } finally {
+                document.getElementById('login-text').classList.remove('hidden');
+                document.getElementById('login-loader').style.display = 'none';
+            }
+        });
+
+        document.getElementById('btn-logout').addEventListener('click', () => { signOut(auth); });
+
+        document.getElementById('btn-tab-diario').addEventListener('click', () => {
+            document.getElementById('aba-diario').classList.remove('hidden');
+            document.getElementById('aba-apuracao').classList.add('hidden');
+            document.getElementById('btn-tab-diario').classList.add('tab-active', 'text-blue-600');
+            document.getElementById('btn-tab-diario').classList.remove('text-slate-500');
+            document.getElementById('btn-tab-apuracao').classList.remove('tab-active', 'text-blue-600');
+            document.getElementById('btn-tab-apuracao').classList.add('text-slate-500');
+        });
+
+        document.getElementById('btn-tab-apuracao').addEventListener('click', () => {
+            document.getElementById('aba-diario').classList.add('hidden');
+            document.getElementById('aba-apuracao').classList.remove('hidden');
+            document.getElementById('btn-tab-diario').classList.remove('tab-active', 'text-blue-600');
+            document.getElementById('btn-tab-diario').classList.add('text-slate-500');
+            document.getElementById('btn-tab-apuracao').classList.add('tab-active', 'text-blue-600');
+            document.getElementById('btn-tab-apuracao').classList.remove('text-slate-500');
+            carregarDadosNuvem(); 
+        });
+
+        document.getElementById('form-venda').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if(!usuarioAtual) return;
+
+            const data = document.getElementById('data-venda').value;
+            const valor = parseFloat(document.getElementById('valor-venda').value);
+            const produto = document.getElementById('produto-venda').value;
+            const mes_ano = data.substring(0, 7); 
+
+            document.getElementById('salvar-text').classList.add('hidden');
+            document.getElementById('salvar-loader').style.display = 'block';
+
+            try {
+                await addDoc(collection(db, "vendas_diarias"), {
+                    usuario_id: usuarioAtual.uid, 
+                    data_venda: data,
+                    mes_ano: mes_ano,
+                    valor: valor,
+                    produto_destaque: produto,
+                    timestamp: new Date()
+                });
+                alert("Venda salva com sucesso na nuvem!");
+                document.getElementById('valor-venda').value = '';
+                document.getElementById('produto-venda').value = '';
+            } catch (error) {
+                console.error("Erro ao salvar:", error);
+                alert("Erro ao salvar. Verifique o console.");
+            } finally {
+                document.getElementById('salvar-text').classList.remove('hidden');
+                document.getElementById('salvar-loader').style.display = 'none';
+            }
+        });
+
+        async function carregarDadosNuvem() {
+            if(!usuarioAtual) return;
+            
+            const mesAnoFiltro = document.getElementById('filtro-mes').value;
+            if(!mesAnoFiltro) return;
+            
+            try {
+                const q = query(collection(db, "vendas_diarias"), 
+                    where("usuario_id", "==", usuarioAtual.uid),
+                    where("mes_ano", "==", mesAnoFiltro)
+                );
+                
+                const querySnapshot = await getDocs(q);
+                let somaMensal = 0;
+                vendasPorDia = {}; 
+                
+                querySnapshot.forEach((doc) => {
+                    let valor = doc.data().valor;
+                    let data = doc.data().data_venda;
+                    somaMensal += valor;
+                    
+                    if(vendasPorDia[data]) {
+                        vendasPorDia[data] += valor;
+                    } else {
+                        vendasPorDia[data] = valor;
+                    }
+                });
+
+                totalRealizadoNuvem = somaMensal;
+                document.getElementById('valor-realizado-nuvem').innerText = somaMensal.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+                
+                calcularDashboard(mesAnoFiltro);
+
+            } catch (error) {
+                console.error("Erro ao buscar dados:", error);
+            }
+        }
+
+        document.getElementById('btn-recalcular').addEventListener('click', () => {
+            const mesAnoFiltro = document.getElementById('filtro-mes').value;
+            calcularDashboard(mesAnoFiltro);
+        });
+
+        function getDiasUteis(anoSelecionado, mesSelecionado) {
+            const hoje = new Date();
+            const ultimoDia = new Date(anoSelecionado, mesSelecionado + 1, 0).getDate();
+            
+            let totais = 0;
+            let passados = 0;
+
+            for (let d = 1; d <= ultimoDia; d++) {
+                let data = new Date(anoSelecionado, mesSelecionado, d);
+                let diaSemana = data.getDay(); 
+                let dataISO = data.toISOString().split('T')[0];
+                
+                if (diaSemana !== 0 && !FERIADOS.includes(dataISO)) {
+                    totais++;
+                    if (anoSelecionado < hoje.getFullYear() || (anoSelecionado === hoje.getFullYear() && mesSelecionado < hoje.getMonth())) {
+                        passados++; 
+                    } else if (anoSelecionado === hoje.getFullYear() && mesSelecionado === hoje.getMonth()) {
+                        if (d <= hoje.getDate()) passados++; 
+                    }
+                }
+            }
+            return { totais, passados };
+        }
+
+        function calcularDashboard(mesAnoFiltro) {
+            const [anoString, mesString] = mesAnoFiltro.split('-');
+            const anoFiltro = parseInt(anoString);
+            const mesFiltro = parseInt(mesString) - 1; 
+            
+            const hoje = new Date();
+            const isMesPassado = (anoFiltro < hoje.getFullYear() || (anoFiltro === hoje.getFullYear() && mesFiltro < hoje.getMonth()));
+
+            const metaTexto = document.getElementById('meta').value.replace(/\D/g, '');
+            const meta = metaTexto ? parseFloat(metaTexto) / 100 : 0;
+            const real = totalRealizadoNuvem;
+            const taxaComissao = parseFloat(document.getElementById('comissao-taxa').value) || 0;
+            
+            const dias = getDiasUteis(anoFiltro, mesFiltro);
+            
+            const tendencia = isMesPassado ? real : (dias.passados > 0 ? (real / dias.passados) * dias.totais : 0);
+            const perc = meta > 0 ? (real / meta) * 100 : 0;
+            const comissaoReal = real * (taxaComissao / 100);
+            const comissaoProj = tendencia * (taxaComissao / 100);
+
+            // Correção Aplicada AQUI para não sobrescrever o HTML e travar o código
+            document.getElementById('label-tendencia-box').innerText = isMesPassado ? "FECHAMENTO FINAL" : "TENDÊNCIA DE VENDA";
+            document.getElementById('box-comissao-proj').style.display = isMesPassado ? "none" : "block";
+            document.getElementById('texto-comissao-real').innerText = isMesPassado ? "Comissão Fechada:" : "Comissão Atual:";
+
+            document.getElementById('res-tendencia').innerText = tendencia.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+            document.getElementById('res-comissao-proj').innerText = comissaoProj.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+            document.getElementById('res-comissao-real').innerText = comissaoReal.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+            
+            document.getElementById('dias-totais').innerText = dias.totais;
+            document.getElementById('dias-passados').innerText = dias.passados;
+            document.getElementById('dias-restantes').innerText = dias.totais - dias.passados;
+            document.getElementById('perc-atingido').innerText = Math.round(perc) + "%";
+            document.getElementById('barra-progresso').style.width = Math.min(perc, 100) + "%";
+
+            const badge = document.getElementById('badge-status');
+            const listaDicas = document.getElementById('dicas-lista');
+            listaDicas.innerHTML = "";
+
+            if (isMesPassado) {
+                if (real < meta) {
+                    badge.innerText = "MÊS FECHADO (NÃO ATINGIU)";
+                    badge.className = "px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-600";
+                    listaDicas.innerHTML = "<li>• Análise Histórica: A meta deste mês não foi atingida. Use os dias de pico do gráfico abaixo para planejar ações futuras.</li>";
+                } else {
+                    badge.innerText = "MÊS FECHADO (ATINGIDO!)";
+                    badge.className = "px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-600";
+                    listaDicas.innerHTML = "<li>• Análise Histórica: Meta superada! Excelente performance no mês selecionado.</li>";
+                }
+            } else {
+                if (tendencia < meta) {
+                    badge.innerText = "ABAIXO DA META";
+                    badge.className = "px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-600";
+                    const dicas = [
+                        "**Análise da Nuvem:** A média de vendas diárias está abaixo do necessário para bater a meta.",
+                        "**Ação Rápida:** Puxe o relatório dos clientes que compraram no mesmo mês do ano passado e envie WhatsApp de renovação."
+                    ];
+                    dicas.forEach(d => listaDicas.innerHTML += `<li>• ${d}</li>`);
+                } else {
+                    badge.innerText = "PREVISÃO DE ATINGIMENTO";
+                    badge.className = "px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-600";
+                    listaDicas.innerHTML = "<li>• Excelente ritmo! O sistema projeta que você ultrapassará a meta do mês se mantiver a média diária atual.</li>";
+                }
+            }
+
+            atualizarGrafico(taxaComissao);
+        }
+
+        function atualizarGrafico(taxaComissao) {
+            const datasOrdenadas = Object.keys(vendasPorDia).sort();
+            
+            const labelsGrafico = datasOrdenadas.map(data => {
+                const partes = data.split('-');
+                return `${partes[2]}/${partes[1]}`;
+            });
+
+            const dadosVendas = datasOrdenadas.map(data => vendasPorDia[data]);
+            const dadosComissao = dadosVendas.map(venda => venda * (taxaComissao / 100));
+
+            if (chartInstancia) {
+                chartInstancia.destroy();
+            }
+
+            const ctx = document.getElementById('graficoEvolucao').getContext('2d');
+            chartInstancia = new Chart(ctx, {
+                type: 'bar', 
+                data: {
+                    labels: labelsGrafico,
+                    datasets: [
+                        {
+                            label: 'Vendas Realizadas (R$)',
+                            data: dadosVendas,
+                            backgroundColor: 'rgba(30, 58, 138, 0.9)', 
+                            borderRadius: 4,
+                            yAxisID: 'y' 
+                        },
+                        {
+                            label: 'Comissão Gerada (R$)',
+                            data: dadosComissao,
+                            type: 'line', 
+                            borderColor: 'rgba(22, 163, 74, 1)', 
+                            backgroundColor: 'rgba(22, 163, 74, 1)',
+                            borderWidth: 3,
+                            tension: 0.3, 
+                            yAxisID: 'y1' 
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { labels: { color: '#000000', font: { weight: 'bold' } } },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) { label += ': '; }
+                                    if (context.parsed.y !== null) {
+                                        label += new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(context.parsed.y);
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { ticks: { color: '#000000', font: { weight: 'bold' } } },
+                        y: {
+                            type: 'linear', display: true, position: 'left',
+                            title: { display: true, text: 'Vendas', color: '#000000', font: { weight: 'bold' } },
+                            ticks: { color: '#000000', font: { weight: 'bold' } }
+                        },
+                        y1: {
+                            type: 'linear', display: true, position: 'right',
+                            title: { display: true, text: 'Comissão', color: '#000000', font: { weight: 'bold' } },
+                            grid: { drawOnChartArea: false }, 
+                            ticks: { color: '#000000', font: { weight: 'bold' } }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
