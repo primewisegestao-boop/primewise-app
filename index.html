@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prime Wise Gestão - Ócullus e Cia</title>
+    <title>Prime Wise Gestão</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -13,34 +13,28 @@
         .tab-active { border-bottom: 3px solid #2563eb; color: #2563eb; }
         .loader { border: 3px solid #f3f3f3; border-top: 3px solid #2563eb; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; display: none; margin: auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
-        /* Classe essencial para forçar o layout na hora da captura do PDF */
-        .pdf-export-mode {
-            width: 1120px !important;
-            max-width: none !important;
-            margin: 0 !important;
-            background-color: #f8fafc;
-            padding: 20px !important;
-        }
+        .pdf-export-mode { width: 1120px !important; max-width: none !important; margin: 0 !important; background-color: #f8fafc; padding: 20px !important; }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen text-slate-800">
 
     <div id="login-screen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900">
-        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md text-center">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md text-center relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 to-purple-600"></div>
             
-            <img src="logo.png" alt="Logo da Empresa" class="h-20 mx-auto mb-4 object-contain" onerror="this.style.display='none'">
+            <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl font-black shadow-inner">PW</div>
             
             <h1 class="text-2xl font-bold text-slate-800 mb-1">Prime Wise Gestão</h1>
-            <p class="text-slate-500 text-sm mb-6">Acesso Restrito</p>
+            <p class="text-slate-500 text-sm mb-6">Acesso Corporativo</p>
             
             <form id="form-login">
-                <input type="email" id="email" placeholder="Seu E-mail" required class="w-full p-3 mb-3 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
-                <input type="password" id="senha" placeholder="Sua Senha" required class="w-full p-3 mb-4 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="email" id="email" placeholder="E-mail de Acesso" required class="w-full p-3 mb-3 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50">
+                <input type="password" id="senha" placeholder="Senha" required class="w-full p-3 mb-4 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50">
                 
                 <p id="login-error" class="text-red-500 text-sm mb-4 hidden">E-mail ou senha incorretos.</p>
+                <p id="login-auth-error" class="text-amber-600 text-sm mb-4 hidden font-semibold">Usuário não vinculado a uma empresa. Contate o suporte.</p>
                 
-                <button type="submit" id="btn-login" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg shadow-lg transition-all flex justify-center">
+                <button type="submit" id="btn-login" class="w-full bg-slate-900 hover:bg-black text-white font-bold py-3 rounded-lg shadow-lg transition-all flex justify-center">
                     <span id="login-text">Entrar no Sistema</span>
                     <div id="login-loader" class="loader"></div>
                 </button>
@@ -53,8 +47,8 @@
             <div class="max-w-6xl mx-auto px-4 flex justify-between items-center h-16 min-w-[600px]">
                 
                 <div class="flex items-center gap-3">
-                    <img src="logo.png" alt="Logo" class="h-8 object-contain" onerror="this.style.display='none'">
-                    <span class="font-bold text-blue-600 text-xl tracking-tight hidden sm:block">ÓCULLUS E CIA.</span>
+                    <img id="header-logo-empresa" src="" alt="Logo Cliente" class="h-8 w-auto object-contain hidden">
+                    <span id="header-nome-empresa" class="font-black text-blue-600 text-xl tracking-tight hidden sm:block uppercase">CARREGANDO...</span>
                 </div>
 
                 <div class="flex space-x-4 md:space-x-6 h-full items-center">
@@ -209,7 +203,7 @@
                 <div id="conteudo-pdf-gerente" class="space-y-6">
                     <div class="bg-amber-50 border border-amber-200 p-6 rounded-xl flex justify-between items-center">
                         <div>
-                            <h2 class="text-2xl font-bold text-amber-900">Painel de Controle da Loja</h2>
+                            <h2 class="text-2xl font-bold text-amber-900">Painel de Controle <span id="painel-nome-empresa" class="uppercase"></span></h2>
                             <p class="text-amber-700 text-sm">Visão de todos os vendedores no mês selecionado.</p>
                         </div>
                         <div class="flex flex-col items-end gap-2">
@@ -233,7 +227,7 @@
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold mb-1 text-slate-500">E-mail do Vendedor</label>
-                                    <input type="email" id="gerente-meta-email" required placeholder="ex: joao@ocullus.com.br" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg">
+                                    <input type="email" id="gerente-meta-email" required placeholder="ex: joao@cliente.com.br" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg">
                                 </div>
                             </div>
                             
@@ -313,8 +307,11 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
+        // VARIÁVEIS MULTI-TENANT (Múltiplas Lojas)
         let usuarioAtual = null;
+        let empresaAtualId = null; 
         let isGerente = false;
+        
         let totalRealizado = 0;
         let vendasPorDia = {}; 
         let chartInstancia = null; 
@@ -333,29 +330,73 @@
         document.getElementById('filtro-mes').addEventListener('change', carregarDados);
         document.getElementById('gerente-meta-mes').addEventListener('change', carregarDadosGerencia);
 
-        onAuthStateChanged(auth, (user) => {
+        // LÓGICA DE LOGIN COM VERIFICAÇÃO DE EMPRESA
+        onAuthStateChanged(auth, async (user) => {
             if (user) {
                 usuarioAtual = user;
-                isGerente = user.email.includes('gerente') || user.email.includes('dono');
-                
-                if (isGerente) { document.getElementById('btn-tab-gerente').classList.remove('hidden'); } 
-                else { document.getElementById('btn-tab-gerente').classList.add('hidden'); }
+                document.getElementById('login-text').classList.add('hidden');
+                document.getElementById('login-loader').style.display = 'block';
 
-                document.getElementById('login-screen').classList.add('hidden');
-                document.getElementById('dashboard').classList.remove('hidden');
-                document.getElementById('data-venda').valueAsDate = new Date();
-                
-                const hoje = new Date();
-                const mesAtualFormatado = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
-                
-                document.getElementById('filtro-mes').value = mesAtualFormatado;
-                document.getElementById('gerente-meta-mes').value = mesAtualFormatado;
-                
-                carregarDados();
+                try {
+                    // Busca o perfil do usuário no Banco de Dados
+                    const userDocRef = doc(db, "usuarios", user.uid);
+                    const userDocSnap = await getDoc(userDocRef);
+
+                    if (userDocSnap.exists()) {
+                        const dadosPerfil = userDocSnap.data();
+                        empresaAtualId = dadosPerfil.empresa_id;
+                        isGerente = (dadosPerfil.papel === 'gerente' || dadosPerfil.papel === 'dono');
+                        
+                        // Busca o Nome e a Logo da Empresa do usuário
+                        const empresaDocRef = doc(db, "empresas", empresaAtualId);
+                        const empresaDocSnap = await getDoc(empresaDocRef);
+                        
+                        if (empresaDocSnap.exists()) {
+                            const dadosEmpresa = empresaDocSnap.data();
+                            // Injeta o nome da empresa na tela
+                            document.getElementById('header-nome-empresa').innerText = dadosEmpresa.nome.toUpperCase();
+                            document.getElementById('painel-nome-empresa').innerText = dadosEmpresa.nome;
+                            
+                            // Se a empresa tiver cadastrado uma logo, substitui na tela
+                            if(dadosEmpresa.logo_url) {
+                                document.getElementById('header-logo-empresa').src = dadosEmpresa.logo_url;
+                                document.getElementById('header-logo-empresa').classList.remove('hidden');
+                            }
+                        }
+
+                        // Configura Interface
+                        if (isGerente) document.getElementById('btn-tab-gerente').classList.remove('hidden');
+                        else document.getElementById('btn-tab-gerente').classList.add('hidden');
+
+                        document.getElementById('login-screen').classList.add('hidden');
+                        document.getElementById('dashboard').classList.remove('hidden');
+                        document.getElementById('data-venda').valueAsDate = new Date();
+                        
+                        const hoje = new Date();
+                        const mesAtualFormatado = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
+                        document.getElementById('filtro-mes').value = mesAtualFormatado;
+                        document.getElementById('gerente-meta-mes').value = mesAtualFormatado;
+                        
+                        carregarDados();
+                    } else {
+                        // Usuário existe no Auth mas não tem empresa vinculada no banco
+                        document.getElementById('login-auth-error').classList.remove('hidden');
+                        document.getElementById('login-text').classList.remove('hidden');
+                        document.getElementById('login-loader').style.display = 'none';
+                        signOut(auth);
+                    }
+                } catch (error) {
+                    console.error("Erro na autorização:", error);
+                    signOut(auth);
+                }
             } else {
-                usuarioAtual = null; isGerente = false;
+                // Logout / Reset total
+                usuarioAtual = null; empresaAtualId = null; isGerente = false;
                 document.getElementById('login-screen').classList.remove('hidden');
                 document.getElementById('dashboard').classList.add('hidden');
+                document.getElementById('login-text').classList.remove('hidden');
+                document.getElementById('login-loader').style.display = 'none';
+                document.getElementById('header-logo-empresa').classList.add('hidden');
             }
         });
 
@@ -366,9 +407,9 @@
             document.getElementById('login-text').classList.add('hidden');
             document.getElementById('login-loader').style.display = 'block';
             document.getElementById('login-error').classList.add('hidden');
+            document.getElementById('login-auth-error').classList.add('hidden');
             try { await signInWithEmailAndPassword(auth, email, senha); } 
-            catch (error) { document.getElementById('login-error').classList.remove('hidden'); } 
-            finally { document.getElementById('login-text').classList.remove('hidden'); document.getElementById('login-loader').style.display = 'none'; }
+            catch (error) { document.getElementById('login-error').classList.remove('hidden'); document.getElementById('login-text').classList.remove('hidden'); document.getElementById('login-loader').style.display = 'none';} 
         });
 
         document.getElementById('btn-logout').addEventListener('click', () => { signOut(auth); });
@@ -396,7 +437,7 @@
 
         document.getElementById('form-venda').addEventListener('submit', async (e) => {
             e.preventDefault();
-            if(!usuarioAtual) return;
+            if(!usuarioAtual || !empresaAtualId) return;
 
             const data = document.getElementById('data-venda').value;
             const valor = parseFloat(document.getElementById('valor-venda').value);
@@ -407,7 +448,9 @@
             document.getElementById('salvar-loader').style.display = 'block';
 
             try {
+                // TODA VENDA AGORA RECEBE O CARIMBO DA EMPRESA
                 await addDoc(collection(db, "vendas_diarias"), {
+                    empresa_id: empresaAtualId, // O SEGREDO DO MULTI-TENANT
                     usuario_id: usuarioAtual.uid, 
                     usuario_email: usuarioAtual.email.toLowerCase(), 
                     data_venda: data,
@@ -426,6 +469,8 @@
 
         document.getElementById('form-meta-gerente').addEventListener('submit', async (e) => {
             e.preventDefault();
+            if(!empresaAtualId) return;
+
             const mes = document.getElementById('gerente-meta-mes').value;
             const emailVendedor = document.getElementById('gerente-meta-email').value.toLowerCase().trim();
             
@@ -438,7 +483,9 @@
             const comissao2 = parseFloat(document.getElementById('gerente-meta-comissao-2').value) || 0;
 
             try {
-                await setDoc(doc(db, "metas_mensais", `${emailVendedor}_${mes}`), {
+                // A META AGORA É SALVA COM A CHAVE DA EMPRESA PARA NÃO MISTURAR E-MAILS IGUAIS EM LOJAS DIFERENTES
+                await setDoc(doc(db, "metas_mensais", `${empresaAtualId}_${emailVendedor}_${mes}`), {
+                    empresa_id: empresaAtualId,
                     usuario_email: emailVendedor,
                     mes_ano: mes,
                     meta_valor: valorMeta,
@@ -450,23 +497,21 @@
                 }, { merge: true });
                 
                 alert(`Metas salvas com sucesso para ${emailVendedor}!`);
-                document.getElementById('gerente-meta-valor').value = '';
-                document.getElementById('gerente-meta-comissao').value = '';
-                document.getElementById('gerente-meta-valor-2').value = '';
-                document.getElementById('gerente-meta-comissao-2').value = '';
+                document.getElementById('gerente-meta-valor').value = ''; document.getElementById('gerente-meta-comissao').value = '';
+                document.getElementById('gerente-meta-valor-2').value = ''; document.getElementById('gerente-meta-comissao-2').value = '';
                 
                 carregarDadosGerencia();
             } catch (error) { alert("Erro ao salvar."); }
         });
 
         async function carregarDados() {
-            if(!usuarioAtual) return;
+            if(!usuarioAtual || !empresaAtualId) return;
             const mesAnoFiltro = document.getElementById('filtro-mes').value;
             if(!mesAnoFiltro) return;
             
             let dadosMeta = null;
             try {
-                const configRef = doc(db, "metas_mensais", `${usuarioAtual.email.toLowerCase()}_${mesAnoFiltro}`);
+                const configRef = doc(db, "metas_mensais", `${empresaAtualId}_${usuarioAtual.email.toLowerCase()}_${mesAnoFiltro}`);
                 const configSnap = await getDoc(configRef);
                 if (configSnap.exists()) { dadosMeta = configSnap.data(); }
             } catch (error) {}
@@ -474,7 +519,6 @@
             if (dadosMeta) {
                 document.getElementById('meta').value = 'R$ ' + new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2 }).format(dadosMeta.meta_valor);
                 document.getElementById('comissao-taxa').value = dadosMeta.comissao_taxa + "%";
-                
                 if(dadosMeta.meta_valor_2 > 0) {
                     document.getElementById('meta-2').value = 'R$ ' + new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2 }).format(dadosMeta.meta_valor_2);
                     document.getElementById('comissao-taxa-2').value = dadosMeta.comissao_taxa_2 + "%";
@@ -487,7 +531,12 @@
             }
 
             try {
-                const q = query(collection(db, "vendas_diarias"), where("usuario_id", "==", usuarioAtual.uid), where("mes_ano", "==", mesAnoFiltro));
+                // FILTRA APENAS VENDAS DAQUELA EMPRESA
+                const q = query(collection(db, "vendas_diarias"), 
+                    where("empresa_id", "==", empresaAtualId), 
+                    where("usuario_id", "==", usuarioAtual.uid), 
+                    where("mes_ano", "==", mesAnoFiltro)
+                );
                 const querySnapshot = await getDocs(q);
                 let somaMensal = 0; vendasPorDia = {}; 
                 querySnapshot.forEach((doc) => {
@@ -502,12 +551,16 @@
         }
 
         async function carregarDadosGerencia() {
-            if(!isGerente) return;
+            if(!isGerente || !empresaAtualId) return;
             const mesAtualFormatado = document.getElementById('gerente-meta-mes').value;
             if(!mesAtualFormatado) return;
             
             try {
-                const qVendas = query(collection(db, "vendas_diarias"), where("mes_ano", "==", mesAtualFormatado));
+                // PUXA APENAS VENDAS DA EMPRESA DELE
+                const qVendas = query(collection(db, "vendas_diarias"), 
+                    where("empresa_id", "==", empresaAtualId), 
+                    where("mes_ano", "==", mesAtualFormatado)
+                );
                 const snapVendas = await getDocs(qVendas);
                 let ranking = {}; let somaLoja = 0;
                 
@@ -520,7 +573,10 @@
                 });
                 document.getElementById('gerente-total-loja').innerText = somaLoja.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
                 
-                const qMetas = query(collection(db, "metas_mensais"), where("mes_ano", "==", mesAtualFormatado));
+                const qMetas = query(collection(db, "metas_mensais"), 
+                    where("empresa_id", "==", empresaAtualId), 
+                    where("mes_ano", "==", mesAtualFormatado)
+                );
                 const snapMetas = await getDocs(qMetas);
                 
                 snapMetas.forEach((doc) => {
@@ -694,16 +750,12 @@
             });
         }
 
-        // --- SOLUÇÃO DEFINITIVA DO PDF ---
         function exportarParaPDF(elementoId, nomeArquivo) {
             const elemento = document.getElementById(elementoId);
             const mainContainer = document.getElementById('main-container');
             const originalMainClasses = mainContainer.className;
 
-            // 1. Rola a página para o topo zero absoluto (evita corte no Y)
             window.scrollTo(0, 0);
-
-            // 2. Destrava a centralização responsiva do Tailwind temporariamente
             mainContainer.className = "w-[1150px] max-w-none m-0 p-4";
             elemento.classList.add('pdf-export-mode');
 
@@ -711,16 +763,10 @@
                 margin:       10, 
                 filename:     nomeArquivo + '.pdf',
                 image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { 
-                    scale: 2, 
-                    useCORS: true, 
-                    scrollX: 0,
-                    scrollY: 0
-                },
+                html2canvas:  { scale: 2, useCORS: true, scrollX: 0, scrollY: 0 },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
             };
             
-            // 3. Dá tempo ao navegador de renderizar a largura fixa, tira a foto e devolve ao normal
             setTimeout(() => {
                 html2pdf().set(opt).from(elemento).save().then(() => {
                     mainContainer.className = originalMainClasses;
