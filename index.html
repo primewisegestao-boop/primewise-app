@@ -13,6 +13,15 @@
         .tab-active { border-bottom: 3px solid #2563eb; color: #2563eb; }
         .loader { border: 3px solid #f3f3f3; border-top: 3px solid #2563eb; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; display: none; margin: auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* Classe essencial para forçar o layout na hora da captura do PDF */
+        .pdf-export-mode {
+            width: 1120px !important;
+            max-width: none !important;
+            margin: 0 !important;
+            background-color: #f8fafc;
+            padding: 20px !important;
+        }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen text-slate-800">
@@ -57,7 +66,7 @@
             </div>
         </nav>
 
-        <main class="max-w-6xl mx-auto p-4 md:p-8">
+        <main id="main-container" class="max-w-6xl mx-auto p-4 md:p-8">
             
             <div id="aba-diario" class="space-y-6 max-w-lg mx-auto">
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
@@ -685,23 +694,39 @@
             });
         }
 
-        // --- ATUALIZAÇÃO DA EXPORTAÇÃO PARA PDF (Correção da Margem e Corte) ---
+        // --- SOLUÇÃO DEFINITIVA DO PDF ---
         function exportarParaPDF(elementoId, nomeArquivo) {
             const elemento = document.getElementById(elementoId);
-            
+            const mainContainer = document.getElementById('main-container');
+            const originalMainClasses = mainContainer.className;
+
+            // 1. Rola a página para o topo zero absoluto (evita corte no Y)
+            window.scrollTo(0, 0);
+
+            // 2. Destrava a centralização responsiva do Tailwind temporariamente
+            mainContainer.className = "w-[1150px] max-w-none m-0 p-4";
+            elemento.classList.add('pdf-export-mode');
+
             const opt = {
-                margin:       10, // Margem de 10mm para segurança
+                margin:       10, 
                 filename:     nomeArquivo + '.pdf',
                 image:        { type: 'jpeg', quality: 0.98 },
                 html2canvas:  { 
                     scale: 2, 
                     useCORS: true, 
-                    windowWidth: 1200 // Força o navegador a renderizar o elemento como se estivesse numa tela de PC Larga antes de fotografar. Isso resolve o corte na tabela!
+                    scrollX: 0,
+                    scrollY: 0
                 },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
             };
             
-            html2pdf().set(opt).from(elemento).save();
+            // 3. Dá tempo ao navegador de renderizar a largura fixa, tira a foto e devolve ao normal
+            setTimeout(() => {
+                html2pdf().set(opt).from(elemento).save().then(() => {
+                    mainContainer.className = originalMainClasses;
+                    elemento.classList.remove('pdf-export-mode');
+                });
+            }, 150);
         }
 
         document.getElementById('btn-exportar-vendedor').addEventListener('click', () => {
