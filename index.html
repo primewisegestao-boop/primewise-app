@@ -6,6 +6,7 @@
     <title>Prime Wise Gestão - Ócullus e Cia</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; scroll-behavior: smooth; }
@@ -19,7 +20,7 @@
     <div id="login-screen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900">
         <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md text-center">
             <h1 class="text-2xl font-bold text-slate-800 mb-1">Prime Wise Gestão</h1>
-            <p class="text-slate-500 text-sm mb-6">Acesso Restrito - Nuvem</p>
+            <p class="text-slate-500 text-sm mb-6">Acesso Restrito</p>
             
             <form id="form-login">
                 <input type="email" id="email" placeholder="Seu E-mail" required class="w-full p-3 mb-3 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
@@ -36,12 +37,13 @@
     </div>
 
     <div id="dashboard" class="hidden">
-        <nav class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
-            <div class="max-w-6xl mx-auto px-4 flex justify-between items-center h-16">
+        <nav class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm overflow-x-auto" data-html2canvas-ignore="true">
+            <div class="max-w-6xl mx-auto px-4 flex justify-between items-center h-16 min-w-[600px]">
                 <span class="font-bold text-blue-600 text-xl tracking-tight">ÓCULLUS E CIA.</span>
-                <div class="flex space-x-6 h-full items-center">
+                <div class="flex space-x-4 md:space-x-6 h-full items-center">
                     <button id="btn-tab-diario" class="h-full px-2 tab-active font-medium transition-all">Lançar Dia</button>
-                    <button id="btn-tab-apuracao" class="h-full px-2 text-slate-500 font-medium transition-all">Apuração Mês</button>
+                    <button id="btn-tab-apuracao" class="h-full px-2 text-slate-500 font-medium transition-all">Meu Desempenho</button>
+                    <button id="btn-tab-gerente" class="hidden h-full px-2 text-amber-600 font-bold transition-all border-b-2 border-transparent hover:border-amber-600">Visão da Loja 👑</button>
                     <button id="btn-logout" class="text-sm text-slate-400 hover:text-red-500 font-bold ml-4">Sair</button>
                 </div>
             </div>
@@ -67,7 +69,7 @@
                                 <input type="text" id="produto-venda" placeholder="Ex: Lente Multifocal" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg">
                             </div>
                             <button type="submit" id="btn-salvar-venda" class="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-md transition flex justify-center mt-4">
-                                <span id="salvar-text">Salvar no Banco de Dados</span>
+                                <span id="salvar-text">Registrar Lançamento</span>
                                 <div id="salvar-loader" class="loader"></div>
                             </button>
                         </div>
@@ -76,105 +78,157 @@
             </div>
 
             <div id="aba-apuracao" class="hidden space-y-6">
+                <div class="flex justify-between items-center mb-4" data-html2canvas-ignore="true">
+                    <h1 class="text-2xl font-bold text-slate-800">Meu Painel de Vendas</h1>
+                    <button id="btn-exportar-vendedor" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded-lg text-sm transition flex items-center gap-2 shadow-sm">
+                        📄 Baixar PDF
+                    </button>
+                </div>
+
+                <div id="conteudo-pdf-vendedor">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="space-y-6">
+                            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                                <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Parâmetros (Meu Painel)</h2>
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-xs font-semibold mb-1 text-indigo-600">Mês de Referência</label>
+                                        <input type="month" id="filtro-mes" class="w-full p-2 bg-indigo-50 border border-indigo-200 rounded-lg font-bold text-indigo-900 cursor-pointer">
+                                    </div>
+                                    <hr class="border-slate-100">
+                                    <div>
+                                        <label class="block text-xs font-semibold mb-1">Minha Meta (R$) <span class="text-[10px] text-amber-600 font-normal ml-1" data-html2canvas-ignore="true">(Definida pela gerência)</span></label>
+                                        <input type="text" id="meta" readonly placeholder="Aguardando meta..." class="w-full p-2 bg-slate-100 border border-slate-200 rounded-lg font-bold text-slate-500 cursor-not-allowed">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold mb-1">% Comissão Base</label>
+                                        <input type="number" step="0.1" id="comissao-taxa" readonly placeholder="0" class="w-full p-2 bg-slate-100 border border-slate-200 rounded-lg font-bold text-slate-500 cursor-not-allowed">
+                                    </div>
+                                    
+                                    <button id="btn-recalcular" class="w-full py-2 bg-slate-800 text-white rounded-lg text-sm font-bold hover:bg-slate-700 flex justify-center items-center gap-2" data-html2canvas-ignore="true">
+                                        <span id="btn-recalcular-text">Atualizar Gráficos</span>
+                                        <div id="btn-recalcular-loader" class="loader !border-t-white !w-4 !h-4"></div>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="bg-blue-600 p-6 rounded-xl shadow-xl text-white">
+                                <h3 class="text-xs font-bold uppercase opacity-70" id="label-tendencia-box">Tendência de Venda</h3>
+                                <p id="res-tendencia" class="text-3xl font-bold my-1">R$ 0,00</p>
+                                <div class="pt-3 border-t border-blue-400 mt-3">
+                                    <p class="text-xs opacity-80" id="box-comissao-proj">Comissão Prevista: <span id="res-comissao-proj" class="font-bold">R$ 0,00</span></p>
+                                    <p class="text-xs opacity-80"><span id="texto-comissao-real">Comissão Atual:</span> <span id="res-comissao-real" class="font-bold">R$ 0,00</span></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-2 space-y-6">
+                            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                                <div class="flex justify-between items-start mb-6">
+                                    <div>
+                                        <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                                            Meu Realizado: <span id="valor-realizado-display" class="text-green-600">R$ 0,00</span>
+                                        </h2>
+                                        <p class="text-slate-500 text-sm">Minhas vendas no período</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <span id="badge-status" class="px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-500">CARREGANDO...</span>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                                    <div class="p-3 bg-slate-50 rounded-lg text-center"><p class="text-[10px] font-bold text-slate-400 uppercase">Dias Úteis</p><p id="dias-totais" class="text-lg font-bold">0</p></div>
+                                    <div class="p-3 bg-slate-50 rounded-lg text-center"><p class="text-[10px] font-bold text-slate-400 uppercase">Trabalhados</p><p id="dias-passados" class="text-lg font-bold text-blue-600">0</p></div>
+                                    <div class="p-3 bg-slate-50 rounded-lg text-center"><p class="text-[10px] font-bold text-slate-400 uppercase">Faltam</p><p id="dias-restantes" class="text-lg font-bold text-orange-600">0</p></div>
+                                    <div class="p-3 bg-slate-50 rounded-lg text-center"><p class="text-[10px] font-bold text-slate-400 uppercase">% Atingido</p><p id="perc-atingido" class="text-lg font-bold text-green-600">0%</p></div>
+                                </div>
+                                <div class="relative h-4 bg-slate-100 rounded-full overflow-hidden mb-2">
+                                    <div id="barra-progresso" class="absolute top-0 left-0 h-full bg-blue-500 transition-all duration-700" style="width: 0%"></div>
+                                </div>
+                            </div>
+
+                            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 mt-6">
+                                <div class="text-center mb-6">
+                                    <h2 class="text-lg font-bold text-black mb-1">Performance Diária</h2>
+                                </div>
+                                <div class="relative w-full h-64">
+                                    <canvas id="graficoEvolucao"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div> </div>
+
+            <div id="aba-gerente" class="hidden space-y-6">
                 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="space-y-6">
-                        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-                            <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Parâmetros de Análise</h2>
-                            <div class="space-y-4">
-                                <div>
-                                    <label class="block text-xs font-semibold mb-1 text-indigo-600">Mês de Referência (Filtro)</label>
-                                    <input type="month" id="filtro-mes" class="w-full p-2 bg-indigo-50 border border-indigo-200 rounded-lg font-bold text-indigo-900 cursor-pointer">
-                                </div>
-                                <hr class="border-slate-100">
-                                <div>
-                                    <label class="block text-xs font-semibold mb-1">Meta do Mês (R$)</label>
-                                    <input type="text" id="meta" value="R$ 40.000,00" class="w-full p-2 bg-slate-50 border rounded-lg font-bold text-blue-700">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-semibold mb-1">% Comissão Base</label>
-                                    <input type="number" step="0.1" id="comissao-taxa" value="2.5" class="w-full p-2 bg-slate-50 border rounded-lg">
-                                </div>
-                                <button id="btn-recalcular" class="w-full py-2 bg-slate-800 text-white rounded-lg text-sm font-bold hover:bg-slate-700">Atualizar Painel</button>
-                            </div>
+                <div id="conteudo-pdf-gerente" class="space-y-6">
+                    
+                    <div class="bg-amber-50 border border-amber-200 p-6 rounded-xl flex justify-between items-center">
+                        <div>
+                            <h2 class="text-2xl font-bold text-amber-900">Painel de Controle da Loja</h2>
+                            <p class="text-amber-700 text-sm">Visão de todos os vendedores no mês selecionado.</p>
                         </div>
-
-                        <div class="bg-blue-600 p-6 rounded-xl shadow-xl text-white">
-                            <h3 class="text-xs font-bold uppercase opacity-70" id="label-tendencia-box">Tendência de Venda</h3>
-                            <p id="res-tendencia" class="text-3xl font-bold my-1">R$ 0,00</p>
-                            <div class="pt-3 border-t border-blue-400 mt-3">
-                                <p class="text-xs opacity-80" id="box-comissao-proj">Comissão Prevista: <span id="res-comissao-proj" class="font-bold">R$ 0,00</span></p>
-                                <p class="text-xs opacity-80"><span id="texto-comissao-real">Comissão Atual:</span> <span id="res-comissao-real" class="font-bold">R$ 0,00</span></p>
+                        <div class="flex flex-col items-end gap-2">
+                            <div class="text-right">
+                                <p class="text-sm font-bold text-amber-700 uppercase">Faturamento Total</p>
+                                <p id="gerente-total-loja" class="text-3xl font-black text-amber-600">R$ 0,00</p>
                             </div>
+                            <button id="btn-exportar-gerente" class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-1 px-3 rounded-md text-xs transition shadow" data-html2canvas-ignore="true">
+                                📄 Exportar Relatório PDF
+                            </button>
                         </div>
                     </div>
 
-                    <div class="lg:col-span-2 space-y-6">
-                        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-                            <div class="flex justify-between items-start mb-6">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100" data-html2canvas-ignore="true">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">🎯 Atribuir Meta Individual</h3>
+                        <form id="form-meta-gerente">
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                                 <div>
-                                    <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
-                                        Total Realizado: <span id="valor-realizado-nuvem" class="text-green-600">R$ 0,00</span>
-                                    </h2>
-                                    <p class="text-slate-500 text-sm">Soma das vendas no período selecionado</p>
+                                    <label class="block text-xs font-semibold mb-1 text-slate-500">Mês de Referência</label>
+                                    <input type="month" id="gerente-meta-mes" required class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg">
                                 </div>
-                                <div class="text-right">
-                                    <span id="badge-status" class="px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-500">CARREGANDO...</span>
+                                <div>
+                                    <label class="block text-xs font-semibold mb-1 text-slate-500">E-mail do Vendedor</label>
+                                    <input type="email" id="gerente-meta-email" required placeholder="ex: joao@ocullus.com.br" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold mb-1 text-slate-500">Valor da Meta (R$)</label>
+                                    <input type="text" id="gerente-meta-valor" required placeholder="R$ 40.000,00" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg font-bold text-blue-700">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold mb-1 text-slate-500">% Comissão</label>
+                                    <input type="number" step="0.1" id="gerente-meta-comissao" required placeholder="2.5" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg">
                                 </div>
                             </div>
+                            <button type="submit" class="mt-4 w-full md:w-auto bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition">Salvar Meta do Vendedor</button>
+                        </form>
+                    </div>
 
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                                <div class="p-3 bg-slate-50 rounded-lg text-center">
-                                    <p class="text-[10px] font-bold text-slate-400 uppercase">Dias Úteis</p>
-                                    <p id="dias-totais" class="text-lg font-bold">0</p>
-                                </div>
-                                <div class="p-3 bg-slate-50 rounded-lg text-center">
-                                    <p class="text-[10px] font-bold text-slate-400 uppercase">Trabalhados</p>
-                                    <p id="dias-passados" class="text-lg font-bold text-blue-600">0</p>
-                                </div>
-                                <div class="p-3 bg-slate-50 rounded-lg text-center">
-                                    <p class="text-[10px] font-bold text-slate-400 uppercase">Faltam</p>
-                                    <p id="dias-restantes" class="text-lg font-bold text-orange-600">0</p>
-                                </div>
-                                <div class="p-3 bg-slate-50 rounded-lg text-center">
-                                    <p class="text-[10px] font-bold text-slate-400 uppercase">% Atingido</p>
-                                    <p id="perc-atingido" class="text-lg font-bold text-green-600">0%</p>
-                                </div>
-                            </div>
-                            <div class="relative h-4 bg-slate-100 rounded-full overflow-hidden mb-2">
-                                <div id="barra-progresso" class="absolute top-0 left-0 h-full bg-blue-500 transition-all duration-700" style="width: 0%"></div>
-                            </div>
-                        </div>
-
-                        <div id="ia-box" class="bg-indigo-50 border border-indigo-100 p-6 rounded-xl">
-                            <div class="flex items-center gap-2 mb-4">
-                                <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white">✨</div>
-                                <h3 class="font-bold text-indigo-900 italic">Análise Prime Wise</h3>
-                            </div>
-                            <ul id="dicas-lista" class="space-y-3 text-sm text-indigo-800">
-                                </ul>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">🏆 Ranking de Vendedores</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm">
+                                <thead class="bg-slate-50 text-slate-500 font-bold uppercase text-[10px]">
+                                    <tr>
+                                        <th class="p-4">Posição</th>
+                                        <th class="p-4">Vendedor (E-mail)</th>
+                                        <th class="p-4">Total Realizado</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabela-ranking" class="divide-y divide-slate-100">
+                                    </tbody>
+                            </table>
                         </div>
                     </div>
-                </div>
+                    
+                </div> </div>
 
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 mt-6">
-                    <div class="text-center mb-6">
-                        <h2 class="text-lg font-bold text-black mb-1">Performance Diária</h2>
-                        <p class="text-black font-bold text-sm">Comparativo de Vendas Totais vs. Comissão Gerada</p>
-                    </div>
-                    <div class="relative w-full h-80">
-                        <canvas id="graficoEvolucao"></canvas>
-                    </div>
-                </div>
-
-            </div>
         </main>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, where, getDocs, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCF_5vgdURx3gtU3H3BIoXmVugx8oPjtLU",
@@ -190,40 +244,50 @@
         const db = getFirestore(app);
 
         let usuarioAtual = null;
-        let totalRealizadoNuvem = 0;
+        let isGerente = false;
+        let totalRealizado = 0;
         let vendasPorDia = {}; 
         let chartInstancia = null; 
 
-        const FERIADOS = [
-            "2026-01-01", "2026-04-03", "2026-04-21", "2026-05-01", 
-            "2026-09-07", "2026-10-11", "2026-10-12", "2026-11-02", 
-            "2026-11-15", "2026-11-20", "2026-12-25"
-        ];
+        const FERIADOS = ["2026-01-01", "2026-04-03", "2026-04-21", "2026-05-01", "2026-09-07", "2026-10-11", "2026-10-12", "2026-11-02", "2026-11-15", "2026-11-20", "2026-12-25"];
 
-        document.getElementById('meta').addEventListener('input', function(e) {
+        document.getElementById('gerente-meta-valor').addEventListener('input', formatarMoeda);
+
+        function formatarMoeda(e) {
             let value = e.target.value.replace(/\D/g, ''); 
             if (value === '') { e.target.value = ''; return; }
             let result = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2 }).format(parseFloat(value) / 100);
             e.target.value = 'R$ ' + result;
-        });
+        }
 
-        document.getElementById('filtro-mes').addEventListener('change', carregarDadosNuvem);
+        document.getElementById('filtro-mes').addEventListener('change', carregarDados);
+        document.getElementById('gerente-meta-mes').addEventListener('change', carregarDadosGerencia);
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 usuarioAtual = user;
+                isGerente = user.email.includes('gerente') || user.email.includes('dono');
+                
+                if (isGerente) {
+                    document.getElementById('btn-tab-gerente').classList.remove('hidden');
+                } else {
+                    document.getElementById('btn-tab-gerente').classList.add('hidden');
+                }
+
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('dashboard').classList.remove('hidden');
-                
                 document.getElementById('data-venda').valueAsDate = new Date();
                 
                 const hoje = new Date();
                 const mesAtualFormatado = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
-                document.getElementById('filtro-mes').value = mesAtualFormatado;
                 
-                carregarDadosNuvem();
+                document.getElementById('filtro-mes').value = mesAtualFormatado;
+                document.getElementById('gerente-meta-mes').value = mesAtualFormatado;
+                
+                carregarDados();
             } else {
                 usuarioAtual = null;
+                isGerente = false;
                 document.getElementById('login-screen').classList.remove('hidden');
                 document.getElementById('dashboard').classList.add('hidden');
             }
@@ -233,16 +297,13 @@
             e.preventDefault();
             const email = document.getElementById('email').value;
             const senha = document.getElementById('senha').value;
-            
             document.getElementById('login-text').classList.add('hidden');
             document.getElementById('login-loader').style.display = 'block';
             document.getElementById('login-error').classList.add('hidden');
-
             try {
                 await signInWithEmailAndPassword(auth, email, senha);
             } catch (error) {
                 document.getElementById('login-error').classList.remove('hidden');
-                console.error("Erro no login:", error);
             } finally {
                 document.getElementById('login-text').classList.remove('hidden');
                 document.getElementById('login-loader').style.display = 'none';
@@ -251,24 +312,32 @@
 
         document.getElementById('btn-logout').addEventListener('click', () => { signOut(auth); });
 
-        document.getElementById('btn-tab-diario').addEventListener('click', () => {
-            document.getElementById('aba-diario').classList.remove('hidden');
-            document.getElementById('aba-apuracao').classList.add('hidden');
-            document.getElementById('btn-tab-diario').classList.add('tab-active', 'text-blue-600');
-            document.getElementById('btn-tab-diario').classList.remove('text-slate-500');
-            document.getElementById('btn-tab-apuracao').classList.remove('tab-active', 'text-blue-600');
-            document.getElementById('btn-tab-apuracao').classList.add('text-slate-500');
-        });
-
-        document.getElementById('btn-tab-apuracao').addEventListener('click', () => {
+        function ativarAba(abaAtiva) {
             document.getElementById('aba-diario').classList.add('hidden');
-            document.getElementById('aba-apuracao').classList.remove('hidden');
-            document.getElementById('btn-tab-diario').classList.remove('tab-active', 'text-blue-600');
-            document.getElementById('btn-tab-diario').classList.add('text-slate-500');
-            document.getElementById('btn-tab-apuracao').classList.add('tab-active', 'text-blue-600');
-            document.getElementById('btn-tab-apuracao').classList.remove('text-slate-500');
-            carregarDadosNuvem(); 
-        });
+            document.getElementById('aba-apuracao').classList.add('hidden');
+            document.getElementById('aba-gerente').classList.add('hidden');
+            document.getElementById(abaAtiva).classList.remove('hidden');
+
+            ['btn-tab-diario', 'btn-tab-apuracao'].forEach(btn => {
+                document.getElementById(btn).classList.remove('tab-active', 'text-blue-600');
+                document.getElementById(btn).classList.add('text-slate-500');
+            });
+            document.getElementById('btn-tab-gerente').classList.remove('border-amber-600');
+
+            if(abaAtiva === 'aba-diario') {
+                document.getElementById('btn-tab-diario').classList.add('tab-active', 'text-blue-600');
+            } else if (abaAtiva === 'aba-apuracao') {
+                document.getElementById('btn-tab-apuracao').classList.add('tab-active', 'text-blue-600');
+                carregarDados();
+            } else if (abaAtiva === 'aba-gerente') {
+                document.getElementById('btn-tab-gerente').classList.add('border-amber-600');
+                carregarDadosGerencia(); 
+            }
+        }
+
+        document.getElementById('btn-tab-diario').addEventListener('click', () => ativarAba('aba-diario'));
+        document.getElementById('btn-tab-apuracao').addEventListener('click', () => ativarAba('aba-apuracao'));
+        document.getElementById('btn-tab-gerente').addEventListener('click', () => ativarAba('aba-gerente'));
 
         document.getElementById('form-venda').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -285,31 +354,69 @@
             try {
                 await addDoc(collection(db, "vendas_diarias"), {
                     usuario_id: usuarioAtual.uid, 
+                    usuario_email: usuarioAtual.email.toLowerCase(), 
                     data_venda: data,
                     mes_ano: mes_ano,
                     valor: valor,
                     produto_destaque: produto,
                     timestamp: new Date()
                 });
-                alert("Venda salva com sucesso na nuvem!");
+                alert("Venda salva com sucesso!");
                 document.getElementById('valor-venda').value = '';
                 document.getElementById('produto-venda').value = '';
             } catch (error) {
                 console.error("Erro ao salvar:", error);
-                alert("Erro ao salvar. Verifique o console.");
             } finally {
                 document.getElementById('salvar-text').classList.remove('hidden');
                 document.getElementById('salvar-loader').style.display = 'none';
             }
         });
 
-        async function carregarDadosNuvem() {
+        document.getElementById('form-meta-gerente').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const mes = document.getElementById('gerente-meta-mes').value;
+            const emailVendedor = document.getElementById('gerente-meta-email').value.toLowerCase().trim();
+            const valorTexto = document.getElementById('gerente-meta-valor').value.replace(/\D/g, '');
+            const valorMeta = valorTexto ? parseFloat(valorTexto) / 100 : 0;
+            const comissao = parseFloat(document.getElementById('gerente-meta-comissao').value) || 0;
+
+            try {
+                await setDoc(doc(db, "metas_mensais", `${emailVendedor}_${mes}`), {
+                    usuario_email: emailVendedor,
+                    mes_ano: mes,
+                    meta_valor: valorMeta,
+                    comissao_taxa: comissao,
+                    ultima_atualizacao: new Date(),
+                    atualizado_por: usuarioAtual.email
+                }, { merge: true });
+                
+                alert(`Meta salva com sucesso para ${emailVendedor}!`);
+                document.getElementById('gerente-meta-valor').value = '';
+                document.getElementById('gerente-meta-comissao').value = '';
+            } catch (error) {
+                console.error("Erro ao salvar meta:", error);
+                alert("Erro ao salvar meta.");
+            }
+        });
+
+        async function carregarDados() {
             if(!usuarioAtual) return;
-            
             const mesAnoFiltro = document.getElementById('filtro-mes').value;
             if(!mesAnoFiltro) return;
             
             try {
+                const configRef = doc(db, "metas_mensais", `${usuarioAtual.email.toLowerCase()}_${mesAnoFiltro}`);
+                const configSnap = await getDoc(configRef);
+                
+                if (configSnap.exists()) {
+                    const dadosMeta = configSnap.data();
+                    document.getElementById('meta').value = 'R$ ' + new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2 }).format(dadosMeta.meta_valor);
+                    document.getElementById('comissao-taxa').value = dadosMeta.comissao_taxa;
+                } else {
+                    document.getElementById('meta').value = 'R$ 0,00';
+                    document.getElementById('comissao-taxa').value = '0';
+                }
+
                 const q = query(collection(db, "vendas_diarias"), 
                     where("usuario_id", "==", usuarioAtual.uid),
                     where("mes_ano", "==", mesAnoFiltro)
@@ -323,41 +430,85 @@
                     let valor = doc.data().valor;
                     let data = doc.data().data_venda;
                     somaMensal += valor;
+                    if(vendasPorDia[data]) { vendasPorDia[data] += valor; } else { vendasPorDia[data] = valor; }
+                });
+
+                totalRealizado = somaMensal;
+                document.getElementById('valor-realizado-display').innerText = somaMensal.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+                
+                calcularDashboard(mesAnoFiltro);
+            } catch (error) { console.error("Erro:", error); }
+        }
+
+        async function carregarDadosGerencia() {
+            if(!isGerente) return;
+            
+            const mesAtualFormatado = document.getElementById('gerente-meta-mes').value;
+            if(!mesAtualFormatado) return;
+            
+            try {
+                const q = query(collection(db, "vendas_diarias"), where("mes_ano", "==", mesAtualFormatado));
+                const querySnapshot = await getDocs(q);
+                
+                let somaLoja = 0;
+                let ranking = {}; 
+                
+                querySnapshot.forEach((doc) => {
+                    let dados = doc.data();
+                    let valor = dados.valor;
+                    let email = dados.usuario_email || "Vendedor Anônimo"; 
                     
-                    if(vendasPorDia[data]) {
-                        vendasPorDia[data] += valor;
+                    somaLoja += valor;
+                    
+                    if(ranking[email]) {
+                        ranking[email] += valor;
                     } else {
-                        vendasPorDia[data] = valor;
+                        ranking[email] = valor;
                     }
                 });
 
-                totalRealizadoNuvem = somaMensal;
-                document.getElementById('valor-realizado-nuvem').innerText = somaMensal.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+                document.getElementById('gerente-total-loja').innerText = somaLoja.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
                 
-                calcularDashboard(mesAnoFiltro);
+                const corpoTabela = document.getElementById('tabela-ranking');
+                corpoTabela.innerHTML = "";
+                
+                const rankingOrdenado = Object.keys(ranking).map(email => {
+                    return { email: email, total: ranking[email] };
+                }).sort((a, b) => b.total - a.total);
 
-            } catch (error) {
-                console.error("Erro ao buscar dados:", error);
-            }
+                rankingOrdenado.forEach((vendedor, index) => {
+                    let medalha = (index + 1) + "º";
+                    if(index === 0) medalha = "🥇 1º";
+                    if(index === 1) medalha = "🥈 2º";
+                    if(index === 2) medalha = "🥉 3º";
+
+                    corpoTabela.innerHTML += `
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="p-4 font-bold text-slate-500">${medalha}</td>
+                            <td class="p-4 font-semibold text-slate-800">${vendedor.email}</td>
+                            <td class="p-4 font-black text-green-600">${vendedor.total.toLocaleString('pt-BR', {style:'currency', currency:'BRL'})}</td>
+                        </tr>
+                    `;
+                });
+
+            } catch (error) { console.error("Erro na gerência:", error); }
         }
 
-        document.getElementById('btn-recalcular').addEventListener('click', () => {
-            const mesAnoFiltro = document.getElementById('filtro-mes').value;
-            calcularDashboard(mesAnoFiltro);
+        document.getElementById('btn-recalcular').addEventListener('click', async () => {
+            document.getElementById('btn-recalcular-text').classList.add('hidden');
+            document.getElementById('btn-recalcular-loader').style.display = 'block';
+            await carregarDados(); 
+            document.getElementById('btn-recalcular-text').classList.remove('hidden');
+            document.getElementById('btn-recalcular-loader').style.display = 'none';
         });
 
         function getDiasUteis(anoSelecionado, mesSelecionado) {
             const hoje = new Date();
             const ultimoDia = new Date(anoSelecionado, mesSelecionado + 1, 0).getDate();
-            
-            let totais = 0;
-            let passados = 0;
-
+            let totais = 0; let passados = 0;
             for (let d = 1; d <= ultimoDia; d++) {
                 let data = new Date(anoSelecionado, mesSelecionado, d);
-                let diaSemana = data.getDay(); 
-                let dataISO = data.toISOString().split('T')[0];
-                
+                let diaSemana = data.getDay(); let dataISO = data.toISOString().split('T')[0];
                 if (diaSemana !== 0 && !FERIADOS.includes(dataISO)) {
                     totais++;
                     if (anoSelecionado < hoje.getFullYear() || (anoSelecionado === hoje.getFullYear() && mesSelecionado < hoje.getMonth())) {
@@ -372,25 +523,21 @@
 
         function calcularDashboard(mesAnoFiltro) {
             const [anoString, mesString] = mesAnoFiltro.split('-');
-            const anoFiltro = parseInt(anoString);
-            const mesFiltro = parseInt(mesString) - 1; 
-            
+            const anoFiltro = parseInt(anoString); const mesFiltro = parseInt(mesString) - 1; 
             const hoje = new Date();
             const isMesPassado = (anoFiltro < hoje.getFullYear() || (anoFiltro === hoje.getFullYear() && mesFiltro < hoje.getMonth()));
 
             const metaTexto = document.getElementById('meta').value.replace(/\D/g, '');
             const meta = metaTexto ? parseFloat(metaTexto) / 100 : 0;
-            const real = totalRealizadoNuvem;
+            const real = totalRealizado;
             const taxaComissao = parseFloat(document.getElementById('comissao-taxa').value) || 0;
             
             const dias = getDiasUteis(anoFiltro, mesFiltro);
-            
             const tendencia = isMesPassado ? real : (dias.passados > 0 ? (real / dias.passados) * dias.totais : 0);
             const perc = meta > 0 ? (real / meta) * 100 : 0;
             const comissaoReal = real * (taxaComissao / 100);
             const comissaoProj = tendencia * (taxaComissao / 100);
 
-            // Correção Aplicada AQUI para não sobrescrever o HTML e travar o código
             document.getElementById('label-tendencia-box').innerText = isMesPassado ? "FECHAMENTO FINAL" : "TENDÊNCIA DE VENDA";
             document.getElementById('box-comissao-proj').style.display = isMesPassado ? "none" : "block";
             document.getElementById('texto-comissao-real').innerText = isMesPassado ? "Comissão Fechada:" : "Comissão Atual:";
@@ -424,7 +571,7 @@
                     badge.innerText = "ABAIXO DA META";
                     badge.className = "px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-600";
                     const dicas = [
-                        "**Análise da Nuvem:** A média de vendas diárias está abaixo do necessário para bater a meta.",
+                        "**Análise do Sistema:** A média de vendas diárias está abaixo do necessário para bater a meta.",
                         "**Ação Rápida:** Puxe o relatório dos clientes que compraram no mesmo mês do ano passado e envie WhatsApp de renovação."
                     ];
                     dicas.forEach(d => listaDicas.innerHTML += `<li>• ${d}</li>`);
@@ -440,80 +587,59 @@
 
         function atualizarGrafico(taxaComissao) {
             const datasOrdenadas = Object.keys(vendasPorDia).sort();
-            
-            const labelsGrafico = datasOrdenadas.map(data => {
-                const partes = data.split('-');
-                return `${partes[2]}/${partes[1]}`;
-            });
-
+            const labelsGrafico = datasOrdenadas.map(data => { const partes = data.split('-'); return `${partes[2]}/${partes[1]}`; });
             const dadosVendas = datasOrdenadas.map(data => vendasPorDia[data]);
             const dadosComissao = dadosVendas.map(venda => venda * (taxaComissao / 100));
 
-            if (chartInstancia) {
-                chartInstancia.destroy();
-            }
-
+            if (chartInstancia) chartInstancia.destroy();
             const ctx = document.getElementById('graficoEvolucao').getContext('2d');
             chartInstancia = new Chart(ctx, {
                 type: 'bar', 
                 data: {
                     labels: labelsGrafico,
                     datasets: [
-                        {
-                            label: 'Vendas Realizadas (R$)',
-                            data: dadosVendas,
-                            backgroundColor: 'rgba(30, 58, 138, 0.9)', 
-                            borderRadius: 4,
-                            yAxisID: 'y' 
-                        },
-                        {
-                            label: 'Comissão Gerada (R$)',
-                            data: dadosComissao,
-                            type: 'line', 
-                            borderColor: 'rgba(22, 163, 74, 1)', 
-                            backgroundColor: 'rgba(22, 163, 74, 1)',
-                            borderWidth: 3,
-                            tension: 0.3, 
-                            yAxisID: 'y1' 
-                        }
+                        { label: 'Vendas (R$)', data: dadosVendas, backgroundColor: 'rgba(30, 58, 138, 0.9)', borderRadius: 4, yAxisID: 'y' },
+                        { label: 'Comissão (R$)', data: dadosComissao, type: 'line', borderColor: 'rgba(22, 163, 74, 1)', backgroundColor: 'rgba(22, 163, 74, 1)', borderWidth: 3, tension: 0.3, yAxisID: 'y1' }
                     ]
                 },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: { mode: 'index', intersect: false },
-                    plugins: {
-                        legend: { labels: { color: '#000000', font: { weight: 'bold' } } },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    let label = context.dataset.label || '';
-                                    if (label) { label += ': '; }
-                                    if (context.parsed.y !== null) {
-                                        label += new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(context.parsed.y);
-                                    }
-                                    return label;
-                                }
-                            }
-                        }
-                    },
+                    responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+                    plugins: { legend: { labels: { color: '#000000', font: { weight: 'bold' } } } },
                     scales: {
                         x: { ticks: { color: '#000000', font: { weight: 'bold' } } },
-                        y: {
-                            type: 'linear', display: true, position: 'left',
-                            title: { display: true, text: 'Vendas', color: '#000000', font: { weight: 'bold' } },
-                            ticks: { color: '#000000', font: { weight: 'bold' } }
-                        },
-                        y1: {
-                            type: 'linear', display: true, position: 'right',
-                            title: { display: true, text: 'Comissão', color: '#000000', font: { weight: 'bold' } },
-                            grid: { drawOnChartArea: false }, 
-                            ticks: { color: '#000000', font: { weight: 'bold' } }
-                        }
+                        y: { type: 'linear', display: true, position: 'left', ticks: { color: '#000000', font: { weight: 'bold' } } },
+                        y1: { type: 'linear', display: true, position: 'right', grid: { drawOnChartArea: false }, ticks: { color: '#000000', font: { weight: 'bold' } } }
                     }
                 }
             });
         }
+
+        // --- LÓGICA DE EXPORTAÇÃO PARA PDF ---
+        function exportarParaPDF(elementoId, nomeArquivo) {
+            const elemento = document.getElementById(elementoId);
+            const opt = {
+                margin:       0.3,
+                filename:     nomeArquivo + '.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'in', format: 'a4', orientation: 'landscape' }
+            };
+            
+            // html2pdf cria o arquivo e faz o download automático
+            html2pdf().set(opt).from(elemento).save();
+        }
+
+        // Botão PDF Vendedor
+        document.getElementById('btn-exportar-vendedor').addEventListener('click', () => {
+            const mes = document.getElementById('filtro-mes').value || 'atual';
+            exportarParaPDF('conteudo-pdf-vendedor', `Relatorio_Vendedor_${mes}`);
+        });
+
+        // Botão PDF Gerente
+        document.getElementById('btn-exportar-gerente').addEventListener('click', () => {
+            const mes = document.getElementById('gerente-meta-mes').value || 'atual';
+            exportarParaPDF('conteudo-pdf-gerente', `Relatorio_Loja_${mes}`);
+        });
     </script>
 </body>
 </html>
