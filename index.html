@@ -13,14 +13,15 @@
         .tab-active { border-bottom: 3px solid #2563eb; color: #2563eb; }
         .loader { border: 3px solid #f3f3f3; border-top: 3px solid #2563eb; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; display: none; margin: auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        /* Classe usada apenas na hora de gerar o PDF para manter layout de PC */
-        .forca-desktop-pdf { width: 1122px !important; max-width: 1122px !important; padding: 20px !important; }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen text-slate-800">
 
     <div id="login-screen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900">
         <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md text-center">
+            
+            <img src="logo.png" alt="Logo da Empresa" class="h-20 mx-auto mb-4 object-contain" onerror="this.style.display='none'">
+            
             <h1 class="text-2xl font-bold text-slate-800 mb-1">Prime Wise Gestão</h1>
             <p class="text-slate-500 text-sm mb-6">Acesso Restrito</p>
             
@@ -41,7 +42,12 @@
     <div id="dashboard" class="hidden">
         <nav class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm overflow-x-auto" data-html2canvas-ignore="true">
             <div class="max-w-6xl mx-auto px-4 flex justify-between items-center h-16 min-w-[600px]">
-                <span class="font-bold text-blue-600 text-xl tracking-tight">ÓCULLUS E CIA.</span>
+                
+                <div class="flex items-center gap-3">
+                    <img src="logo.png" alt="Logo" class="h-8 object-contain" onerror="this.style.display='none'">
+                    <span class="font-bold text-blue-600 text-xl tracking-tight hidden sm:block">ÓCULLUS E CIA.</span>
+                </div>
+
                 <div class="flex space-x-4 md:space-x-6 h-full items-center">
                     <button id="btn-tab-diario" class="h-full px-2 tab-active font-medium transition-all">Lançar Dia</button>
                     <button id="btn-tab-apuracao" class="h-full px-2 text-slate-500 font-medium transition-all">Meu Desempenho</button>
@@ -306,7 +312,6 @@
 
         const FERIADOS = ["2026-01-01", "2026-04-03", "2026-04-21", "2026-05-01", "2026-09-07", "2026-10-11", "2026-10-12", "2026-11-02", "2026-11-15", "2026-11-20", "2026-12-25"];
 
-        // Máscaras Monetárias
         function formatarMoeda(e) {
             let value = e.target.value.replace(/\D/g, ''); 
             if (value === '') { e.target.value = ''; return; }
@@ -410,7 +415,6 @@
             finally { document.getElementById('salvar-text').classList.remove('hidden'); document.getElementById('salvar-loader').style.display = 'none'; }
         });
 
-        // SALVANDO META 1 E META 2 (SUPER META)
         document.getElementById('form-meta-gerente').addEventListener('submit', async (e) => {
             e.preventDefault();
             const mes = document.getElementById('gerente-meta-mes').value;
@@ -430,21 +434,22 @@
                     mes_ano: mes,
                     meta_valor: valorMeta,
                     comissao_taxa: comissao,
-                    meta_valor_2: valorMeta2,     // Novo campo
-                    comissao_taxa_2: comissao2,   // Novo campo
+                    meta_valor_2: valorMeta2,
+                    comissao_taxa_2: comissao2,
                     ultima_atualizacao: new Date(),
                     atualizado_por: usuarioAtual.email
                 }, { merge: true });
                 
-                alert(`Meta e Super Meta salvas para ${emailVendedor}!`);
+                alert(`Metas salvas com sucesso para ${emailVendedor}!`);
                 document.getElementById('gerente-meta-valor').value = '';
                 document.getElementById('gerente-meta-comissao').value = '';
                 document.getElementById('gerente-meta-valor-2').value = '';
                 document.getElementById('gerente-meta-comissao-2').value = '';
+                
+                carregarDadosGerencia();
             } catch (error) { alert("Erro ao salvar."); }
         });
 
-        // CARREGA DADOS DO VENDEDOR (Inclui a Super Meta)
         async function carregarDados() {
             if(!usuarioAtual) return;
             const mesAnoFiltro = document.getElementById('filtro-mes').value;
@@ -465,8 +470,7 @@
                     document.getElementById('meta-2').value = 'R$ ' + new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2 }).format(dadosMeta.meta_valor_2);
                     document.getElementById('comissao-taxa-2').value = dadosMeta.comissao_taxa_2 + "%";
                 } else {
-                    document.getElementById('meta-2').value = '';
-                    document.getElementById('comissao-taxa-2').value = '';
+                    document.getElementById('meta-2').value = ''; document.getElementById('comissao-taxa-2').value = '';
                 }
             } else {
                 document.getElementById('meta').value = ''; document.getElementById('comissao-taxa').value = '';
@@ -488,14 +492,12 @@
             } catch (error) { calcularDashboard(mesAnoFiltro); }
         }
 
-        // CARREGA DADOS DO GERENTE (Com Tabela Reestruturada cruzando Dados)
         async function carregarDadosGerencia() {
             if(!isGerente) return;
             const mesAtualFormatado = document.getElementById('gerente-meta-mes').value;
             if(!mesAtualFormatado) return;
             
             try {
-                // 1. Busca Vendas
                 const qVendas = query(collection(db, "vendas_diarias"), where("mes_ano", "==", mesAtualFormatado));
                 const snapVendas = await getDocs(qVendas);
                 let ranking = {}; let somaLoja = 0;
@@ -509,7 +511,6 @@
                 });
                 document.getElementById('gerente-total-loja').innerText = somaLoja.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
                 
-                // 2. Busca Metas do Mês para cruzar na tabela
                 const qMetas = query(collection(db, "metas_mensais"), where("mes_ano", "==", mesAtualFormatado));
                 const snapMetas = await getDocs(qMetas);
                 
@@ -519,7 +520,6 @@
                     ranking[email].meta = doc.data().meta_valor;
                 });
 
-                // 3. Monta Tabela
                 const corpoTabela = document.getElementById('tabela-ranking');
                 corpoTabela.innerHTML = "";
                 
@@ -528,7 +528,7 @@
                     obj.email = email;
                     obj.perc = obj.meta > 0 ? (obj.real / obj.meta) * 100 : 0;
                     return obj;
-                }).sort((a, b) => b.real - a.real); // Ordena pelo Realizado
+                }).sort((a, b) => b.real - a.real);
 
                 rankingOrdenado.forEach((vendedor, index) => {
                     let medalha = (index + 1) + "º";
@@ -575,7 +575,6 @@
             return { totais, passados };
         }
 
-        // CÁLCULO ATUALIZADO PARA SUPORTAR A SUPER META
         function calcularDashboard(mesAnoFiltro) {
             if(!mesAnoFiltro) return;
             const [anoString, mesString] = mesAnoFiltro.split('-');
@@ -585,7 +584,6 @@
 
             const metaTexto = document.getElementById('meta').value.replace(/\D/g, '');
             const meta = metaTexto ? parseFloat(metaTexto) / 100 : 0;
-            
             const metaTexto2 = document.getElementById('meta-2').value.replace(/\D/g, '');
             const meta2 = metaTexto2 ? parseFloat(metaTexto2) / 100 : 0;
 
@@ -597,7 +595,6 @@
             const tendencia = isMesPassado ? real : (dias.passados > 0 ? (real / dias.passados) * dias.totais : 0);
             const perc = meta > 0 ? (real / meta) * 100 : 0;
 
-            // --- LÓGICA DO ACELERADOR (SUPER META) ---
             let taxaAtivaReal = taxaComissao;
             let taxaAtivaProj = taxaComissao;
             let hitSuperReal = false;
@@ -609,7 +606,6 @@
             const comissaoReal = real * (taxaAtivaReal / 100);
             const comissaoProj = tendencia * (taxaAtivaProj / 100);
 
-            // Atualiza UI com Selos de Super Meta
             document.getElementById('label-tendencia-box').innerText = isMesPassado ? "FECHAMENTO FINAL" : "TENDÊNCIA DE VENDA";
             document.getElementById('box-comissao-proj').style.display = isMesPassado ? "none" : "flex";
             document.getElementById('texto-comissao-real').innerText = isMesPassado ? "Comissão Fechada:" : "Comissão Atual:";
@@ -659,7 +655,6 @@
             atualizarGrafico(taxaAtivaReal);
         }
 
-        // O gráfico usará a taxa ativa do momento para não confundir a leitura
         function atualizarGrafico(taxaComissao) {
             const datasOrdenadas = Object.keys(vendasPorDia).sort();
             const labelsGrafico = datasOrdenadas.map(data => { const partes = data.split('-'); return `${partes[2]}/${partes[1]}`; });
@@ -690,26 +685,23 @@
             });
         }
 
-        // --- CORREÇÃO DO LAYOUT DO PDF ---
-        // A função força temporariamente uma largura fixa ("Desktop") no container para tirar a foto e volta ao normal
+        // --- ATUALIZAÇÃO DA EXPORTAÇÃO PARA PDF (Correção da Margem e Corte) ---
         function exportarParaPDF(elementoId, nomeArquivo) {
             const elemento = document.getElementById(elementoId);
             
-            // Adiciona classe que força a largura para caber o gráfico sem quebrar
-            elemento.classList.add('forca-desktop-pdf');
-
             const opt = {
-                margin:       0.2,
+                margin:       10, // Margem de 10mm para segurança
                 filename:     nomeArquivo + '.pdf',
                 image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, windowWidth: 1122 },
-                jsPDF:        { unit: 'in', format: 'a4', orientation: 'landscape' }
+                html2canvas:  { 
+                    scale: 2, 
+                    useCORS: true, 
+                    windowWidth: 1200 // Força o navegador a renderizar o elemento como se estivesse numa tela de PC Larga antes de fotografar. Isso resolve o corte na tabela!
+                },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
             };
             
-            html2pdf().set(opt).from(elemento).save().then(() => {
-                // Remove a classe para a tela do usuário voltar a ficar responsiva normal
-                elemento.classList.remove('forca-desktop-pdf');
-            });
+            html2pdf().set(opt).from(elemento).save();
         }
 
         document.getElementById('btn-exportar-vendedor').addEventListener('click', () => {
