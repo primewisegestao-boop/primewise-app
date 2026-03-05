@@ -156,12 +156,20 @@
                             </div>
                         </div>
                     </div>
-                </div> </div>
+                    
+                    <div id="ia-box" class="bg-indigo-50 border border-indigo-100 p-6 rounded-xl mt-6">
+                        <div class="flex items-center gap-2 mb-4">
+                            <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white">✨</div>
+                            <h3 class="font-bold text-indigo-900 italic">Análise Prime Wise</h3>
+                        </div>
+                        <ul id="dicas-lista" class="space-y-3 text-sm text-indigo-800">
+                            </ul>
+                    </div>
+                </div>
+            </div>
 
             <div id="aba-gerente" class="hidden space-y-6">
-                
                 <div id="conteudo-pdf-gerente" class="space-y-6">
-                    
                     <div class="bg-amber-50 border border-amber-200 p-6 rounded-xl flex justify-between items-center">
                         <div>
                             <h2 class="text-2xl font-bold text-amber-900">Painel de Controle da Loja</h2>
@@ -219,8 +227,8 @@
                             </table>
                         </div>
                     </div>
-                    
-                </div> </div>
+                </div> 
+            </div>
 
         </main>
     </div>
@@ -364,6 +372,11 @@
                 alert("Venda salva com sucesso!");
                 document.getElementById('valor-venda').value = '';
                 document.getElementById('produto-venda').value = '';
+                
+                // Força atualização se estiver na aba apuração
+                if (!document.getElementById('aba-apuracao').classList.contains('hidden')) {
+                    carregarDados();
+                }
             } catch (error) {
                 console.error("Erro ao salvar:", error);
             } finally {
@@ -399,24 +412,33 @@
             }
         });
 
+        // REVISÃO CIRÚRGICA: Tratamento de Erros e Meta 0
         async function carregarDados() {
             if(!usuarioAtual) return;
             const mesAnoFiltro = document.getElementById('filtro-mes').value;
             if(!mesAnoFiltro) return;
             
+            let dadosMeta = null;
+            
+            // Passo 1: Buscar a Meta com segurança
             try {
                 const configRef = doc(db, "metas_mensais", `${usuarioAtual.email.toLowerCase()}_${mesAnoFiltro}`);
                 const configSnap = await getDoc(configRef);
-                
                 if (configSnap.exists()) {
-                    const dadosMeta = configSnap.data();
-                    document.getElementById('meta').value = 'R$ ' + new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2 }).format(dadosMeta.meta_valor);
-                    document.getElementById('comissao-taxa').value = dadosMeta.comissao_taxa;
-                } else {
-                    document.getElementById('meta').value = 'R$ 0,00';
-                    document.getElementById('comissao-taxa').value = '0';
+                    dadosMeta = configSnap.data();
                 }
+            } catch (error) { console.error("Erro ao carregar meta:", error); }
 
+            if (dadosMeta) {
+                document.getElementById('meta').value = 'R$ ' + new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2 }).format(dadosMeta.meta_valor);
+                document.getElementById('comissao-taxa').value = dadosMeta.comissao_taxa;
+            } else {
+                document.getElementById('meta').value = '';
+                document.getElementById('comissao-taxa').value = '';
+            }
+
+            // Passo 2: Buscar Vendas com segurança
+            try {
                 const q = query(collection(db, "vendas_diarias"), 
                     where("usuario_id", "==", usuarioAtual.uid),
                     where("mes_ano", "==", mesAnoFiltro)
@@ -437,12 +459,14 @@
                 document.getElementById('valor-realizado-display').innerText = somaMensal.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
                 
                 calcularDashboard(mesAnoFiltro);
-            } catch (error) { console.error("Erro:", error); }
+            } catch (error) { 
+                console.error("Erro ao carregar vendas:", error); 
+                calcularDashboard(mesAnoFiltro); // Roda o dash mesmo vazio para resetar tela
+            }
         }
 
         async function carregarDadosGerencia() {
             if(!isGerente) return;
-            
             const mesAtualFormatado = document.getElementById('gerente-meta-mes').value;
             if(!mesAtualFormatado) return;
             
@@ -457,14 +481,8 @@
                     let dados = doc.data();
                     let valor = dados.valor;
                     let email = dados.usuario_email || "Vendedor Anônimo"; 
-                    
                     somaLoja += valor;
-                    
-                    if(ranking[email]) {
-                        ranking[email] += valor;
-                    } else {
-                        ranking[email] = valor;
-                    }
+                    if(ranking[email]) { ranking[email] += valor; } else { ranking[email] = valor; }
                 });
 
                 document.getElementById('gerente-total-loja').innerText = somaLoja.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
@@ -481,7 +499,6 @@
                     if(index === 0) medalha = "🥇 1º";
                     if(index === 1) medalha = "🥈 2º";
                     if(index === 2) medalha = "🥉 3º";
-
                     corpoTabela.innerHTML += `
                         <tr class="hover:bg-slate-50 transition">
                             <td class="p-4 font-bold text-slate-500">${medalha}</td>
@@ -490,7 +507,6 @@
                         </tr>
                     `;
                 });
-
             } catch (error) { console.error("Erro na gerência:", error); }
         }
 
@@ -521,23 +537,29 @@
             return { totais, passados };
         }
 
+        // LÓGICA TOTALMENTE CORRIGIDA E BLINDADA
         function calcularDashboard(mesAnoFiltro) {
+            if(!mesAnoFiltro) return;
             const [anoString, mesString] = mesAnoFiltro.split('-');
-            const anoFiltro = parseInt(anoString); const mesFiltro = parseInt(mesString) - 1; 
+            const anoFiltro = parseInt(anoString); 
+            const mesFiltro = parseInt(mesString) - 1; 
             const hoje = new Date();
             const isMesPassado = (anoFiltro < hoje.getFullYear() || (anoFiltro === hoje.getFullYear() && mesFiltro < hoje.getMonth()));
 
             const metaTexto = document.getElementById('meta').value.replace(/\D/g, '');
             const meta = metaTexto ? parseFloat(metaTexto) / 100 : 0;
-            const real = totalRealizado;
+            const real = totalRealizado || 0;
             const taxaComissao = parseFloat(document.getElementById('comissao-taxa').value) || 0;
             
             const dias = getDiasUteis(anoFiltro, mesFiltro);
             const tendencia = isMesPassado ? real : (dias.passados > 0 ? (real / dias.passados) * dias.totais : 0);
+            
+            // Previne erro de divisão por zero se a meta não existir
             const perc = meta > 0 ? (real / meta) * 100 : 0;
             const comissaoReal = real * (taxaComissao / 100);
             const comissaoProj = tendencia * (taxaComissao / 100);
 
+            // Atualiza Textos
             document.getElementById('label-tendencia-box').innerText = isMesPassado ? "FECHAMENTO FINAL" : "TENDÊNCIA DE VENDA";
             document.getElementById('box-comissao-proj').style.display = isMesPassado ? "none" : "block";
             document.getElementById('texto-comissao-real').innerText = isMesPassado ? "Comissão Fechada:" : "Comissão Atual:";
@@ -552,11 +574,18 @@
             document.getElementById('perc-atingido').innerText = Math.round(perc) + "%";
             document.getElementById('barra-progresso').style.width = Math.min(perc, 100) + "%";
 
+            // IA Coach e Status (CORREÇÃO APLICADA AQUI)
             const badge = document.getElementById('badge-status');
             const listaDicas = document.getElementById('dicas-lista');
             listaDicas.innerHTML = "";
 
-            if (isMesPassado) {
+            if (meta === 0) {
+                // Cenário: O gerente ainda não definiu a meta
+                badge.innerText = "AGUARDANDO META";
+                badge.className = "px-3 py-1 rounded-full text-xs font-bold bg-slate-200 text-slate-600";
+                listaDicas.innerHTML = "<li>⚠️ <b>Meta não definida:</b> O gerente ainda não atribuiu sua meta para este mês. Suas vendas e comissões estão sendo contabilizadas, mas a projeção de atingimento requer um alvo.</li>";
+            } else if (isMesPassado) {
+                // Cenário: Mês já acabou
                 if (real < meta) {
                     badge.innerText = "MÊS FECHADO (NÃO ATINGIU)";
                     badge.className = "px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-600";
@@ -567,6 +596,7 @@
                     listaDicas.innerHTML = "<li>• Análise Histórica: Meta superada! Excelente performance no mês selecionado.</li>";
                 }
             } else {
+                // Cenário: Mês atual correndo
                 if (tendencia < meta) {
                     badge.innerText = "ABAIXO DA META";
                     badge.className = "px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-600";
@@ -593,6 +623,8 @@
 
             if (chartInstancia) chartInstancia.destroy();
             const ctx = document.getElementById('graficoEvolucao').getContext('2d');
+            
+            // Se não houver vendas, não precisa quebrar o canvas, apenas desenha vazio
             chartInstancia = new Chart(ctx, {
                 type: 'bar', 
                 data: {
@@ -614,7 +646,6 @@
             });
         }
 
-        // --- LÓGICA DE EXPORTAÇÃO PARA PDF ---
         function exportarParaPDF(elementoId, nomeArquivo) {
             const elemento = document.getElementById(elementoId);
             const opt = {
@@ -624,18 +655,14 @@
                 html2canvas:  { scale: 2, useCORS: true },
                 jsPDF:        { unit: 'in', format: 'a4', orientation: 'landscape' }
             };
-            
-            // html2pdf cria o arquivo e faz o download automático
             html2pdf().set(opt).from(elemento).save();
         }
 
-        // Botão PDF Vendedor
         document.getElementById('btn-exportar-vendedor').addEventListener('click', () => {
             const mes = document.getElementById('filtro-mes').value || 'atual';
             exportarParaPDF('conteudo-pdf-vendedor', `Relatorio_Vendedor_${mes}`);
         });
 
-        // Botão PDF Gerente
         document.getElementById('btn-exportar-gerente').addEventListener('click', () => {
             const mes = document.getElementById('gerente-meta-mes').value || 'atual';
             exportarParaPDF('conteudo-pdf-gerente', `Relatorio_Loja_${mes}`);
