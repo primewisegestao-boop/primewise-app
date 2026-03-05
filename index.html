@@ -13,6 +13,8 @@
         .tab-active { border-bottom: 3px solid #2563eb; color: #2563eb; }
         .loader { border: 3px solid #f3f3f3; border-top: 3px solid #2563eb; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; display: none; margin: auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        /* Classe usada apenas na hora de gerar o PDF para manter layout de PC */
+        .forca-desktop-pdf { width: 1122px !important; max-width: 1122px !important; padding: 20px !important; }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen text-slate-800">
@@ -96,13 +98,27 @@
                                         <input type="month" id="filtro-mes" class="w-full p-2 bg-indigo-50 border border-indigo-200 rounded-lg font-bold text-indigo-900 cursor-pointer">
                                     </div>
                                     <hr class="border-slate-100">
-                                    <div>
-                                        <label class="block text-xs font-semibold mb-1">Minha Meta (R$) <span class="text-[10px] text-amber-600 font-normal ml-1" data-html2canvas-ignore="true">(Definida pela gerência)</span></label>
-                                        <input type="text" id="meta" readonly placeholder="Aguardando meta..." class="w-full p-2 bg-slate-100 border border-slate-200 rounded-lg font-bold text-slate-500 cursor-not-allowed">
+                                    
+                                    <div class="flex gap-2">
+                                        <div class="w-2/3">
+                                            <label class="block text-[11px] font-semibold mb-1">Meta Principal (R$)</label>
+                                            <input type="text" id="meta" readonly placeholder="..." class="w-full p-2 bg-slate-100 border border-slate-200 rounded-lg font-bold text-slate-600 cursor-not-allowed">
+                                        </div>
+                                        <div class="w-1/3">
+                                            <label class="block text-[11px] font-semibold mb-1">% Comissão</label>
+                                            <input type="text" id="comissao-taxa" readonly placeholder="..." class="w-full p-2 bg-slate-100 border border-slate-200 rounded-lg font-bold text-slate-600 cursor-not-allowed">
+                                        </div>
                                     </div>
-                                    <div>
-                                        <label class="block text-xs font-semibold mb-1">% Comissão Base</label>
-                                        <input type="number" step="0.1" id="comissao-taxa" readonly placeholder="0" class="w-full p-2 bg-slate-100 border border-slate-200 rounded-lg font-bold text-slate-500 cursor-not-allowed">
+
+                                    <div class="flex gap-2 bg-purple-50 p-2 rounded-lg border border-purple-100">
+                                        <div class="w-2/3">
+                                            <label class="block text-[10px] font-bold mb-1 text-purple-700 uppercase">Super Meta (R$)</label>
+                                            <input type="text" id="meta-2" readonly placeholder="Não definida" class="w-full p-1.5 bg-transparent border-none font-bold text-purple-900 text-sm outline-none cursor-default">
+                                        </div>
+                                        <div class="w-1/3">
+                                            <label class="block text-[10px] font-bold mb-1 text-purple-700 uppercase">% Extra</label>
+                                            <input type="text" id="comissao-taxa-2" readonly placeholder="-" class="w-full p-1.5 bg-transparent border-none font-bold text-purple-900 text-sm outline-none cursor-default">
+                                        </div>
                                     </div>
                                     
                                     <button id="btn-recalcular" class="w-full py-2 bg-slate-800 text-white rounded-lg text-sm font-bold hover:bg-slate-700 flex justify-center items-center gap-2" data-html2canvas-ignore="true">
@@ -115,9 +131,15 @@
                             <div class="bg-blue-600 p-6 rounded-xl shadow-xl text-white">
                                 <h3 class="text-xs font-bold uppercase opacity-70" id="label-tendencia-box">Tendência de Venda</h3>
                                 <p id="res-tendencia" class="text-3xl font-bold my-1">R$ 0,00</p>
-                                <div class="pt-3 border-t border-blue-400 mt-3">
-                                    <p class="text-xs opacity-80" id="box-comissao-proj">Comissão Prevista: <span id="res-comissao-proj" class="font-bold">R$ 0,00</span></p>
-                                    <p class="text-xs opacity-80"><span id="texto-comissao-real">Comissão Atual:</span> <span id="res-comissao-real" class="font-bold">R$ 0,00</span></p>
+                                <div class="pt-3 border-t border-blue-400 mt-3 space-y-1">
+                                    <p class="text-xs opacity-90 flex justify-between items-center" id="box-comissao-proj">
+                                        <span>Comissão Prevista: <span id="badge-super-proj" class="hidden ml-1 text-[9px] bg-purple-300 text-purple-900 px-1.5 py-0.5 rounded font-bold">SUPER</span></span>
+                                        <span id="res-comissao-proj" class="font-bold text-sm">R$ 0,00</span>
+                                    </p>
+                                    <p class="text-xs opacity-90 flex justify-between items-center">
+                                        <span><span id="texto-comissao-real">Comissão Atual:</span> <span id="badge-super-real" class="hidden ml-1 text-[9px] bg-purple-300 text-purple-900 px-1.5 py-0.5 rounded font-bold">SUPER</span></span>
+                                        <span id="res-comissao-real" class="font-bold text-sm">R$ 0,00</span>
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -187,9 +209,9 @@
                     </div>
 
                     <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100" data-html2canvas-ignore="true">
-                        <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">🎯 Atribuir Meta Individual</h3>
+                        <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">🎯 Atribuir Metas da Equipe</h3>
                         <form id="form-meta-gerente">
-                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                 <div>
                                     <label class="block text-xs font-semibold mb-1 text-slate-500">Mês de Referência</label>
                                     <input type="month" id="gerente-meta-mes" required class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg">
@@ -198,16 +220,39 @@
                                     <label class="block text-xs font-semibold mb-1 text-slate-500">E-mail do Vendedor</label>
                                     <input type="email" id="gerente-meta-email" required placeholder="ex: joao@ocullus.com.br" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg">
                                 </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50 p-4 rounded-lg border border-slate-100 mb-4">
                                 <div>
-                                    <label class="block text-xs font-semibold mb-1 text-slate-500">Valor da Meta (R$)</label>
-                                    <input type="text" id="gerente-meta-valor" required placeholder="R$ 40.000,00" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg font-bold text-blue-700">
+                                    <h4 class="text-sm font-bold text-slate-700 mb-3 border-b pb-1">Meta Principal</h4>
+                                    <div class="space-y-3">
+                                        <div>
+                                            <label class="block text-[11px] font-semibold mb-1 text-slate-500">Valor da Meta (R$)</label>
+                                            <input type="text" id="gerente-meta-valor" required placeholder="R$ 40.000,00" class="w-full p-2 bg-white border border-slate-200 rounded-lg font-bold text-blue-700">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[11px] font-semibold mb-1 text-slate-500">% Comissão Base</label>
+                                            <input type="number" step="0.1" id="gerente-meta-comissao" required placeholder="2.5" class="w-full p-2 bg-white border border-slate-200 rounded-lg">
+                                        </div>
+                                    </div>
                                 </div>
+                                
                                 <div>
-                                    <label class="block text-xs font-semibold mb-1 text-slate-500">% Comissão</label>
-                                    <input type="number" step="0.1" id="gerente-meta-comissao" required placeholder="2.5" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg">
+                                    <h4 class="text-sm font-bold text-purple-700 mb-3 border-b border-purple-100 pb-1">Acelerador (Super Meta) - Opcional</h4>
+                                    <div class="space-y-3">
+                                        <div>
+                                            <label class="block text-[11px] font-semibold mb-1 text-purple-600">Valor 2ª Meta (R$)</label>
+                                            <input type="text" id="gerente-meta-valor-2" placeholder="Ex: R$ 50.000,00" class="w-full p-2 bg-white border border-purple-200 rounded-lg font-bold text-purple-700">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[11px] font-semibold mb-1 text-purple-600">% Comissão Acelerada</label>
+                                            <input type="number" step="0.1" id="gerente-meta-comissao-2" placeholder="Ex: 3.5" class="w-full p-2 bg-white border border-purple-200 rounded-lg">
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <button type="submit" class="mt-4 w-full md:w-auto bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition">Salvar Meta do Vendedor</button>
+
+                            <button type="submit" class="w-full md:w-auto bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition">Salvar Configuração do Vendedor</button>
                         </form>
                     </div>
 
@@ -219,7 +264,9 @@
                                     <tr>
                                         <th class="p-4">Posição</th>
                                         <th class="p-4">Vendedor (E-mail)</th>
-                                        <th class="p-4">Total Realizado</th>
+                                        <th class="p-4">Meta (R$)</th>
+                                        <th class="p-4">Realizado (R$)</th>
+                                        <th class="p-4">% Atingido</th>
                                     </tr>
                                 </thead>
                                 <tbody id="tabela-ranking" class="divide-y divide-slate-100">
@@ -259,14 +306,15 @@
 
         const FERIADOS = ["2026-01-01", "2026-04-03", "2026-04-21", "2026-05-01", "2026-09-07", "2026-10-11", "2026-10-12", "2026-11-02", "2026-11-15", "2026-11-20", "2026-12-25"];
 
-        document.getElementById('gerente-meta-valor').addEventListener('input', formatarMoeda);
-
+        // Máscaras Monetárias
         function formatarMoeda(e) {
             let value = e.target.value.replace(/\D/g, ''); 
             if (value === '') { e.target.value = ''; return; }
             let result = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2 }).format(parseFloat(value) / 100);
             e.target.value = 'R$ ' + result;
         }
+        document.getElementById('gerente-meta-valor').addEventListener('input', formatarMoeda);
+        document.getElementById('gerente-meta-valor-2').addEventListener('input', formatarMoeda);
 
         document.getElementById('filtro-mes').addEventListener('change', carregarDados);
         document.getElementById('gerente-meta-mes').addEventListener('change', carregarDadosGerencia);
@@ -276,11 +324,8 @@
                 usuarioAtual = user;
                 isGerente = user.email.includes('gerente') || user.email.includes('dono');
                 
-                if (isGerente) {
-                    document.getElementById('btn-tab-gerente').classList.remove('hidden');
-                } else {
-                    document.getElementById('btn-tab-gerente').classList.add('hidden');
-                }
+                if (isGerente) { document.getElementById('btn-tab-gerente').classList.remove('hidden'); } 
+                else { document.getElementById('btn-tab-gerente').classList.add('hidden'); }
 
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('dashboard').classList.remove('hidden');
@@ -294,8 +339,7 @@
                 
                 carregarDados();
             } else {
-                usuarioAtual = null;
-                isGerente = false;
+                usuarioAtual = null; isGerente = false;
                 document.getElementById('login-screen').classList.remove('hidden');
                 document.getElementById('dashboard').classList.add('hidden');
             }
@@ -308,14 +352,9 @@
             document.getElementById('login-text').classList.add('hidden');
             document.getElementById('login-loader').style.display = 'block';
             document.getElementById('login-error').classList.add('hidden');
-            try {
-                await signInWithEmailAndPassword(auth, email, senha);
-            } catch (error) {
-                document.getElementById('login-error').classList.remove('hidden');
-            } finally {
-                document.getElementById('login-text').classList.remove('hidden');
-                document.getElementById('login-loader').style.display = 'none';
-            }
+            try { await signInWithEmailAndPassword(auth, email, senha); } 
+            catch (error) { document.getElementById('login-error').classList.remove('hidden'); } 
+            finally { document.getElementById('login-text').classList.remove('hidden'); document.getElementById('login-loader').style.display = 'none'; }
         });
 
         document.getElementById('btn-logout').addEventListener('click', () => { signOut(auth); });
@@ -332,15 +371,9 @@
             });
             document.getElementById('btn-tab-gerente').classList.remove('border-amber-600');
 
-            if(abaAtiva === 'aba-diario') {
-                document.getElementById('btn-tab-diario').classList.add('tab-active', 'text-blue-600');
-            } else if (abaAtiva === 'aba-apuracao') {
-                document.getElementById('btn-tab-apuracao').classList.add('tab-active', 'text-blue-600');
-                carregarDados();
-            } else if (abaAtiva === 'aba-gerente') {
-                document.getElementById('btn-tab-gerente').classList.add('border-amber-600');
-                carregarDadosGerencia(); 
-            }
+            if(abaAtiva === 'aba-diario') { document.getElementById('btn-tab-diario').classList.add('tab-active', 'text-blue-600'); } 
+            else if (abaAtiva === 'aba-apuracao') { document.getElementById('btn-tab-apuracao').classList.add('tab-active', 'text-blue-600'); carregarDados(); } 
+            else if (abaAtiva === 'aba-gerente') { document.getElementById('btn-tab-gerente').classList.add('border-amber-600'); carregarDadosGerencia(); }
         }
 
         document.getElementById('btn-tab-diario').addEventListener('click', () => ativarAba('aba-diario'));
@@ -372,26 +405,24 @@
                 alert("Venda salva com sucesso!");
                 document.getElementById('valor-venda').value = '';
                 document.getElementById('produto-venda').value = '';
-                
-                // Força atualização se estiver na aba apuração
-                if (!document.getElementById('aba-apuracao').classList.contains('hidden')) {
-                    carregarDados();
-                }
-            } catch (error) {
-                console.error("Erro ao salvar:", error);
-            } finally {
-                document.getElementById('salvar-text').classList.remove('hidden');
-                document.getElementById('salvar-loader').style.display = 'none';
-            }
+                if (!document.getElementById('aba-apuracao').classList.contains('hidden')) { carregarDados(); }
+            } catch (error) { console.error("Erro:", error); } 
+            finally { document.getElementById('salvar-text').classList.remove('hidden'); document.getElementById('salvar-loader').style.display = 'none'; }
         });
 
+        // SALVANDO META 1 E META 2 (SUPER META)
         document.getElementById('form-meta-gerente').addEventListener('submit', async (e) => {
             e.preventDefault();
             const mes = document.getElementById('gerente-meta-mes').value;
             const emailVendedor = document.getElementById('gerente-meta-email').value.toLowerCase().trim();
+            
             const valorTexto = document.getElementById('gerente-meta-valor').value.replace(/\D/g, '');
             const valorMeta = valorTexto ? parseFloat(valorTexto) / 100 : 0;
             const comissao = parseFloat(document.getElementById('gerente-meta-comissao').value) || 0;
+
+            const valorTexto2 = document.getElementById('gerente-meta-valor-2').value.replace(/\D/g, '');
+            const valorMeta2 = valorTexto2 ? parseFloat(valorTexto2) / 100 : 0;
+            const comissao2 = parseFloat(document.getElementById('gerente-meta-comissao-2').value) || 0;
 
             try {
                 await setDoc(doc(db, "metas_mensais", `${emailVendedor}_${mes}`), {
@@ -399,114 +430,125 @@
                     mes_ano: mes,
                     meta_valor: valorMeta,
                     comissao_taxa: comissao,
+                    meta_valor_2: valorMeta2,     // Novo campo
+                    comissao_taxa_2: comissao2,   // Novo campo
                     ultima_atualizacao: new Date(),
                     atualizado_por: usuarioAtual.email
                 }, { merge: true });
                 
-                alert(`Meta salva com sucesso para ${emailVendedor}!`);
+                alert(`Meta e Super Meta salvas para ${emailVendedor}!`);
                 document.getElementById('gerente-meta-valor').value = '';
                 document.getElementById('gerente-meta-comissao').value = '';
-            } catch (error) {
-                console.error("Erro ao salvar meta:", error);
-                alert("Erro ao salvar meta.");
-            }
+                document.getElementById('gerente-meta-valor-2').value = '';
+                document.getElementById('gerente-meta-comissao-2').value = '';
+            } catch (error) { alert("Erro ao salvar."); }
         });
 
-        // REVISÃO CIRÚRGICA: Tratamento de Erros e Meta 0
+        // CARREGA DADOS DO VENDEDOR (Inclui a Super Meta)
         async function carregarDados() {
             if(!usuarioAtual) return;
             const mesAnoFiltro = document.getElementById('filtro-mes').value;
             if(!mesAnoFiltro) return;
             
             let dadosMeta = null;
-            
-            // Passo 1: Buscar a Meta com segurança
             try {
                 const configRef = doc(db, "metas_mensais", `${usuarioAtual.email.toLowerCase()}_${mesAnoFiltro}`);
                 const configSnap = await getDoc(configRef);
-                if (configSnap.exists()) {
-                    dadosMeta = configSnap.data();
-                }
-            } catch (error) { console.error("Erro ao carregar meta:", error); }
+                if (configSnap.exists()) { dadosMeta = configSnap.data(); }
+            } catch (error) {}
 
             if (dadosMeta) {
                 document.getElementById('meta').value = 'R$ ' + new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2 }).format(dadosMeta.meta_valor);
-                document.getElementById('comissao-taxa').value = dadosMeta.comissao_taxa;
+                document.getElementById('comissao-taxa').value = dadosMeta.comissao_taxa + "%";
+                
+                if(dadosMeta.meta_valor_2 > 0) {
+                    document.getElementById('meta-2').value = 'R$ ' + new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2 }).format(dadosMeta.meta_valor_2);
+                    document.getElementById('comissao-taxa-2').value = dadosMeta.comissao_taxa_2 + "%";
+                } else {
+                    document.getElementById('meta-2').value = '';
+                    document.getElementById('comissao-taxa-2').value = '';
+                }
             } else {
-                document.getElementById('meta').value = '';
-                document.getElementById('comissao-taxa').value = '';
+                document.getElementById('meta').value = ''; document.getElementById('comissao-taxa').value = '';
+                document.getElementById('meta-2').value = ''; document.getElementById('comissao-taxa-2').value = '';
             }
 
-            // Passo 2: Buscar Vendas com segurança
             try {
-                const q = query(collection(db, "vendas_diarias"), 
-                    where("usuario_id", "==", usuarioAtual.uid),
-                    where("mes_ano", "==", mesAnoFiltro)
-                );
-                
+                const q = query(collection(db, "vendas_diarias"), where("usuario_id", "==", usuarioAtual.uid), where("mes_ano", "==", mesAnoFiltro));
                 const querySnapshot = await getDocs(q);
-                let somaMensal = 0;
-                vendasPorDia = {}; 
-                
+                let somaMensal = 0; vendasPorDia = {}; 
                 querySnapshot.forEach((doc) => {
-                    let valor = doc.data().valor;
-                    let data = doc.data().data_venda;
+                    let valor = doc.data().valor; let data = doc.data().data_venda;
                     somaMensal += valor;
                     if(vendasPorDia[data]) { vendasPorDia[data] += valor; } else { vendasPorDia[data] = valor; }
                 });
-
                 totalRealizado = somaMensal;
                 document.getElementById('valor-realizado-display').innerText = somaMensal.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
-                
                 calcularDashboard(mesAnoFiltro);
-            } catch (error) { 
-                console.error("Erro ao carregar vendas:", error); 
-                calcularDashboard(mesAnoFiltro); // Roda o dash mesmo vazio para resetar tela
-            }
+            } catch (error) { calcularDashboard(mesAnoFiltro); }
         }
 
+        // CARREGA DADOS DO GERENTE (Com Tabela Reestruturada cruzando Dados)
         async function carregarDadosGerencia() {
             if(!isGerente) return;
             const mesAtualFormatado = document.getElementById('gerente-meta-mes').value;
             if(!mesAtualFormatado) return;
             
             try {
-                const q = query(collection(db, "vendas_diarias"), where("mes_ano", "==", mesAtualFormatado));
-                const querySnapshot = await getDocs(q);
+                // 1. Busca Vendas
+                const qVendas = query(collection(db, "vendas_diarias"), where("mes_ano", "==", mesAtualFormatado));
+                const snapVendas = await getDocs(qVendas);
+                let ranking = {}; let somaLoja = 0;
                 
-                let somaLoja = 0;
-                let ranking = {}; 
-                
-                querySnapshot.forEach((doc) => {
-                    let dados = doc.data();
-                    let valor = dados.valor;
-                    let email = dados.usuario_email || "Vendedor Anônimo"; 
-                    somaLoja += valor;
-                    if(ranking[email]) { ranking[email] += valor; } else { ranking[email] = valor; }
+                snapVendas.forEach((doc) => {
+                    let val = doc.data().valor;
+                    let email = doc.data().usuario_email || "Vendedor Anônimo"; 
+                    somaLoja += val;
+                    if(!ranking[email]) ranking[email] = { real: 0, meta: 0 };
+                    ranking[email].real += val;
                 });
-
                 document.getElementById('gerente-total-loja').innerText = somaLoja.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
                 
+                // 2. Busca Metas do Mês para cruzar na tabela
+                const qMetas = query(collection(db, "metas_mensais"), where("mes_ano", "==", mesAtualFormatado));
+                const snapMetas = await getDocs(qMetas);
+                
+                snapMetas.forEach((doc) => {
+                    let email = doc.data().usuario_email;
+                    if(!ranking[email]) ranking[email] = { real: 0, meta: 0 };
+                    ranking[email].meta = doc.data().meta_valor;
+                });
+
+                // 3. Monta Tabela
                 const corpoTabela = document.getElementById('tabela-ranking');
                 corpoTabela.innerHTML = "";
                 
                 const rankingOrdenado = Object.keys(ranking).map(email => {
-                    return { email: email, total: ranking[email] };
-                }).sort((a, b) => b.total - a.total);
+                    let obj = ranking[email];
+                    obj.email = email;
+                    obj.perc = obj.meta > 0 ? (obj.real / obj.meta) * 100 : 0;
+                    return obj;
+                }).sort((a, b) => b.real - a.real); // Ordena pelo Realizado
 
                 rankingOrdenado.forEach((vendedor, index) => {
                     let medalha = (index + 1) + "º";
-                    if(index === 0) medalha = "🥇 1º";
-                    if(index === 1) medalha = "🥈 2º";
-                    if(index === 2) medalha = "🥉 3º";
+                    if(index === 0) medalha = "🥇 1º"; else if(index === 1) medalha = "🥈 2º"; else if(index === 2) medalha = "🥉 3º";
+
+                    let formataReal = vendedor.real.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+                    let formataMeta = vendedor.meta > 0 ? vendedor.meta.toLocaleString('pt-BR', {style:'currency', currency:'BRL'}) : '-';
+                    let corPerc = vendedor.perc >= 100 ? 'text-green-600' : 'text-amber-600';
+
                     corpoTabela.innerHTML += `
-                        <tr class="hover:bg-slate-50 transition">
+                        <tr class="hover:bg-slate-50 transition border-b border-slate-50 last:border-0">
                             <td class="p-4 font-bold text-slate-500">${medalha}</td>
                             <td class="p-4 font-semibold text-slate-800">${vendedor.email}</td>
-                            <td class="p-4 font-black text-green-600">${vendedor.total.toLocaleString('pt-BR', {style:'currency', currency:'BRL'})}</td>
+                            <td class="p-4 text-slate-500 font-medium">${formataMeta}</td>
+                            <td class="p-4 font-black text-slate-800">${formataReal}</td>
+                            <td class="p-4 font-bold ${corPerc}">${vendedor.perc.toFixed(1)}%</td>
                         </tr>
                     `;
                 });
+
             } catch (error) { console.error("Erro na gerência:", error); }
         }
 
@@ -519,50 +561,61 @@
         });
 
         function getDiasUteis(anoSelecionado, mesSelecionado) {
-            const hoje = new Date();
-            const ultimoDia = new Date(anoSelecionado, mesSelecionado + 1, 0).getDate();
+            const hoje = new Date(); const ultimoDia = new Date(anoSelecionado, mesSelecionado + 1, 0).getDate();
             let totais = 0; let passados = 0;
             for (let d = 1; d <= ultimoDia; d++) {
                 let data = new Date(anoSelecionado, mesSelecionado, d);
                 let diaSemana = data.getDay(); let dataISO = data.toISOString().split('T')[0];
                 if (diaSemana !== 0 && !FERIADOS.includes(dataISO)) {
                     totais++;
-                    if (anoSelecionado < hoje.getFullYear() || (anoSelecionado === hoje.getFullYear() && mesSelecionado < hoje.getMonth())) {
-                        passados++; 
-                    } else if (anoSelecionado === hoje.getFullYear() && mesSelecionado === hoje.getMonth()) {
-                        if (d <= hoje.getDate()) passados++; 
-                    }
+                    if (anoSelecionado < hoje.getFullYear() || (anoSelecionado === hoje.getFullYear() && mesSelecionado < hoje.getMonth())) { passados++; } 
+                    else if (anoSelecionado === hoje.getFullYear() && mesSelecionado === hoje.getMonth()) { if (d <= hoje.getDate()) passados++; }
                 }
             }
             return { totais, passados };
         }
 
-        // LÓGICA TOTALMENTE CORRIGIDA E BLINDADA
+        // CÁLCULO ATUALIZADO PARA SUPORTAR A SUPER META
         function calcularDashboard(mesAnoFiltro) {
             if(!mesAnoFiltro) return;
             const [anoString, mesString] = mesAnoFiltro.split('-');
-            const anoFiltro = parseInt(anoString); 
-            const mesFiltro = parseInt(mesString) - 1; 
+            const anoFiltro = parseInt(anoString); const mesFiltro = parseInt(mesString) - 1; 
             const hoje = new Date();
             const isMesPassado = (anoFiltro < hoje.getFullYear() || (anoFiltro === hoje.getFullYear() && mesFiltro < hoje.getMonth()));
 
             const metaTexto = document.getElementById('meta').value.replace(/\D/g, '');
             const meta = metaTexto ? parseFloat(metaTexto) / 100 : 0;
+            
+            const metaTexto2 = document.getElementById('meta-2').value.replace(/\D/g, '');
+            const meta2 = metaTexto2 ? parseFloat(metaTexto2) / 100 : 0;
+
             const real = totalRealizado || 0;
             const taxaComissao = parseFloat(document.getElementById('comissao-taxa').value) || 0;
+            const taxaComissao2 = parseFloat(document.getElementById('comissao-taxa-2').value) || 0;
             
             const dias = getDiasUteis(anoFiltro, mesFiltro);
             const tendencia = isMesPassado ? real : (dias.passados > 0 ? (real / dias.passados) * dias.totais : 0);
-            
-            // Previne erro de divisão por zero se a meta não existir
             const perc = meta > 0 ? (real / meta) * 100 : 0;
-            const comissaoReal = real * (taxaComissao / 100);
-            const comissaoProj = tendencia * (taxaComissao / 100);
 
-            // Atualiza Textos
+            // --- LÓGICA DO ACELERADOR (SUPER META) ---
+            let taxaAtivaReal = taxaComissao;
+            let taxaAtivaProj = taxaComissao;
+            let hitSuperReal = false;
+            let hitSuperProj = false;
+
+            if (meta2 > 0 && real >= meta2) { taxaAtivaReal = taxaComissao2; hitSuperReal = true; }
+            if (meta2 > 0 && tendencia >= meta2) { taxaAtivaProj = taxaComissao2; hitSuperProj = true; }
+
+            const comissaoReal = real * (taxaAtivaReal / 100);
+            const comissaoProj = tendencia * (taxaAtivaProj / 100);
+
+            // Atualiza UI com Selos de Super Meta
             document.getElementById('label-tendencia-box').innerText = isMesPassado ? "FECHAMENTO FINAL" : "TENDÊNCIA DE VENDA";
-            document.getElementById('box-comissao-proj').style.display = isMesPassado ? "none" : "block";
+            document.getElementById('box-comissao-proj').style.display = isMesPassado ? "none" : "flex";
             document.getElementById('texto-comissao-real').innerText = isMesPassado ? "Comissão Fechada:" : "Comissão Atual:";
+
+            document.getElementById('badge-super-real').classList.toggle('hidden', !hitSuperReal);
+            document.getElementById('badge-super-proj').classList.toggle('hidden', !hitSuperProj);
 
             document.getElementById('res-tendencia').innerText = tendencia.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
             document.getElementById('res-comissao-proj').innerText = comissaoProj.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
@@ -574,47 +627,39 @@
             document.getElementById('perc-atingido').innerText = Math.round(perc) + "%";
             document.getElementById('barra-progresso').style.width = Math.min(perc, 100) + "%";
 
-            // IA Coach e Status (CORREÇÃO APLICADA AQUI)
             const badge = document.getElementById('badge-status');
             const listaDicas = document.getElementById('dicas-lista');
             listaDicas.innerHTML = "";
 
             if (meta === 0) {
-                // Cenário: O gerente ainda não definiu a meta
-                badge.innerText = "AGUARDANDO META";
-                badge.className = "px-3 py-1 rounded-full text-xs font-bold bg-slate-200 text-slate-600";
-                listaDicas.innerHTML = "<li>⚠️ <b>Meta não definida:</b> O gerente ainda não atribuiu sua meta para este mês. Suas vendas e comissões estão sendo contabilizadas, mas a projeção de atingimento requer um alvo.</li>";
+                badge.innerText = "AGUARDANDO META"; badge.className = "px-3 py-1 rounded-full text-xs font-bold bg-slate-200 text-slate-600";
+                listaDicas.innerHTML = "<li>⚠️ <b>Meta não definida:</b> O gerente ainda não atribuiu sua meta para este mês.</li>";
             } else if (isMesPassado) {
-                // Cenário: Mês já acabou
                 if (real < meta) {
-                    badge.innerText = "MÊS FECHADO (NÃO ATINGIU)";
-                    badge.className = "px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-600";
-                    listaDicas.innerHTML = "<li>• Análise Histórica: A meta deste mês não foi atingida. Use os dias de pico do gráfico abaixo para planejar ações futuras.</li>";
+                    badge.innerText = "MÊS FECHADO (NÃO ATINGIU)"; badge.className = "px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-600";
+                    listaDicas.innerHTML = "<li>• Análise Histórica: A meta deste mês não foi atingida.</li>";
                 } else {
-                    badge.innerText = "MÊS FECHADO (ATINGIDO!)";
-                    badge.className = "px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-600";
-                    listaDicas.innerHTML = "<li>• Análise Histórica: Meta superada! Excelente performance no mês selecionado.</li>";
+                    badge.innerText = hitSuperReal ? "MÊS FECHADO (SUPER META!)" : "MÊS FECHADO (ATINGIDO!)"; 
+                    badge.className = hitSuperReal ? "px-3 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-600" : "px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-600";
+                    listaDicas.innerHTML = "<li>• Análise Histórica: Excelente performance no mês selecionado.</li>";
                 }
             } else {
-                // Cenário: Mês atual correndo
                 if (tendencia < meta) {
-                    badge.innerText = "ABAIXO DA META";
-                    badge.className = "px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-600";
-                    const dicas = [
-                        "**Análise do Sistema:** A média de vendas diárias está abaixo do necessário para bater a meta.",
-                        "**Ação Rápida:** Puxe o relatório dos clientes que compraram no mesmo mês do ano passado e envie WhatsApp de renovação."
-                    ];
-                    dicas.forEach(d => listaDicas.innerHTML += `<li>• ${d}</li>`);
+                    badge.innerText = "ABAIXO DA META"; badge.className = "px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-600";
+                    listaDicas.innerHTML = "<li>• <b>Ação Rápida:</b> Puxe o relatório dos clientes antigos e envie WhatsApp de renovação para reverter a tendência.</li>";
+                } else if (meta2 > 0 && tendencia >= meta2) {
+                    badge.innerText = "RUMO À SUPER META"; badge.className = "px-3 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-600";
+                    listaDicas.innerHTML = "<li>🚀 <b>Ritmo Extraordinário!</b> O sistema projeta que você baterá a Super Meta e ativará o acelerador de comissão!</li>";
                 } else {
-                    badge.innerText = "PREVISÃO DE ATINGIMENTO";
-                    badge.className = "px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-600";
-                    listaDicas.innerHTML = "<li>• Excelente ritmo! O sistema projeta que você ultrapassará a meta do mês se mantiver a média diária atual.</li>";
+                    badge.innerText = "PREVISÃO DE ATINGIMENTO"; badge.className = "px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-600";
+                    listaDicas.innerHTML = "<li>• <b>No caminho certo!</b> Mantenha a média diária para garantir o atingimento. Tente fazer vendas adicionais (cross-sell) para buscar a super meta!</li>";
                 }
             }
 
-            atualizarGrafico(taxaComissao);
+            atualizarGrafico(taxaAtivaReal);
         }
 
+        // O gráfico usará a taxa ativa do momento para não confundir a leitura
         function atualizarGrafico(taxaComissao) {
             const datasOrdenadas = Object.keys(vendasPorDia).sort();
             const labelsGrafico = datasOrdenadas.map(data => { const partes = data.split('-'); return `${partes[2]}/${partes[1]}`; });
@@ -624,14 +669,13 @@
             if (chartInstancia) chartInstancia.destroy();
             const ctx = document.getElementById('graficoEvolucao').getContext('2d');
             
-            // Se não houver vendas, não precisa quebrar o canvas, apenas desenha vazio
             chartInstancia = new Chart(ctx, {
                 type: 'bar', 
                 data: {
                     labels: labelsGrafico,
                     datasets: [
                         { label: 'Vendas (R$)', data: dadosVendas, backgroundColor: 'rgba(30, 58, 138, 0.9)', borderRadius: 4, yAxisID: 'y' },
-                        { label: 'Comissão (R$)', data: dadosComissao, type: 'line', borderColor: 'rgba(22, 163, 74, 1)', backgroundColor: 'rgba(22, 163, 74, 1)', borderWidth: 3, tension: 0.3, yAxisID: 'y1' }
+                        { label: 'Comissão Gerada (R$)', data: dadosComissao, type: 'line', borderColor: 'rgba(22, 163, 74, 1)', backgroundColor: 'rgba(22, 163, 74, 1)', borderWidth: 3, tension: 0.3, yAxisID: 'y1' }
                     ]
                 },
                 options: {
@@ -646,26 +690,36 @@
             });
         }
 
+        // --- CORREÇÃO DO LAYOUT DO PDF ---
+        // A função força temporariamente uma largura fixa ("Desktop") no container para tirar a foto e volta ao normal
         function exportarParaPDF(elementoId, nomeArquivo) {
             const elemento = document.getElementById(elementoId);
+            
+            // Adiciona classe que força a largura para caber o gráfico sem quebrar
+            elemento.classList.add('forca-desktop-pdf');
+
             const opt = {
-                margin:       0.3,
+                margin:       0.2,
                 filename:     nomeArquivo + '.pdf',
                 image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true },
+                html2canvas:  { scale: 2, useCORS: true, windowWidth: 1122 },
                 jsPDF:        { unit: 'in', format: 'a4', orientation: 'landscape' }
             };
-            html2pdf().set(opt).from(elemento).save();
+            
+            html2pdf().set(opt).from(elemento).save().then(() => {
+                // Remove a classe para a tela do usuário voltar a ficar responsiva normal
+                elemento.classList.remove('forca-desktop-pdf');
+            });
         }
 
         document.getElementById('btn-exportar-vendedor').addEventListener('click', () => {
             const mes = document.getElementById('filtro-mes').value || 'atual';
-            exportarParaPDF('conteudo-pdf-vendedor', `Relatorio_Vendedor_${mes}`);
+            exportarParaPDF('conteudo-pdf-vendedor', `Desempenho_Vendas_${mes}`);
         });
 
         document.getElementById('btn-exportar-gerente').addEventListener('click', () => {
             const mes = document.getElementById('gerente-meta-mes').value || 'atual';
-            exportarParaPDF('conteudo-pdf-gerente', `Relatorio_Loja_${mes}`);
+            exportarParaPDF('conteudo-pdf-gerente', `Ranking_Loja_${mes}`);
         });
     </script>
 </body>
