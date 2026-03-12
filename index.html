@@ -22,7 +22,8 @@
         <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md text-center relative overflow-hidden">
             <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 to-purple-600"></div>
             
-            <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl font-black shadow-inner">PW</div>
+            <img src="logo.png" alt="Logo da Empresa" class="h-20 mx-auto mb-4 object-contain" onerror="this.style.display='none'">
+            <div id="logo-fallback" class="w-16 h-16 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl font-black shadow-inner hidden">PW</div>
             
             <h1 class="text-2xl font-bold text-slate-800 mb-1">Prime Wise Gestão</h1>
             <p class="text-slate-500 text-sm mb-6">Acesso Corporativo</p>
@@ -62,29 +63,60 @@
 
         <main id="main-container" class="max-w-6xl mx-auto p-4 md:p-8">
             
-            <div id="aba-diario" class="space-y-6 max-w-lg mx-auto">
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-                    <h2 class="text-lg font-bold text-slate-800 mb-4">Lançar Vendas do Dia</h2>
+            <div id="aba-diario" class="space-y-6 max-w-4xl mx-auto">
+                <div class="max-w-lg mx-auto bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                    <h2 class="text-lg font-bold text-slate-800 mb-4" id="titulo-form-venda">Lançar Vendas do Dia</h2>
                     <form id="form-venda">
                         <div class="space-y-4">
                             <div>
                                 <label class="block text-xs font-semibold mb-1 text-slate-500 uppercase">Data da Venda</label>
-                                <input type="date" id="data-venda" required class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                                <input type="date" id="data-venda" required class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold mb-1 text-slate-500 uppercase">Número da OS (Opcional)</label>
+                                <input type="text" id="os-venda" placeholder="Ex: 12345" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold mb-1 text-slate-500 uppercase">Valor Total (R$)</label>
-                                <input type="number" step="0.01" id="valor-venda" required placeholder="Ex: 1500.50" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg font-bold text-green-700 text-lg">
+                                <input type="text" id="valor-venda" required placeholder="R$ 0,00" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg font-bold text-green-700 text-lg outline-none focus:ring-2 focus:ring-green-500">
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold mb-1 text-slate-500 uppercase">Produto Destaque (Opcional)</label>
-                                <input type="text" id="produto-venda" placeholder="Ex: Lente Multifocal" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                                <input type="text" id="produto-venda" placeholder="Ex: Lente Multifocal" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
                             </div>
-                            <button type="submit" id="btn-salvar-venda" class="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-md transition flex justify-center mt-4">
-                                <span id="salvar-text">Registrar Lançamento</span>
-                                <div id="salvar-loader" class="loader"></div>
-                            </button>
+                            
+                            <div class="flex gap-2 mt-4">
+                                <button type="button" id="btn-cancelar-edicao" class="hidden w-1/3 py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-lg transition">Cancelar</button>
+                                <button type="submit" id="btn-salvar-venda" class="flex-1 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-md transition flex justify-center items-center">
+                                    <span id="salvar-text">Registrar Lançamento</span>
+                                    <div id="salvar-loader" class="loader !border-t-white !w-5 !h-5 ml-2"></div>
+                                </button>
+                            </div>
                         </div>
                     </form>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-bold text-slate-800">Meus Lançamentos do Mês</h3>
+                        <p class="text-xs text-slate-500">Referência: <span id="label-mes-historico" class="font-bold">Mês Atual</span></p>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-slate-50 text-slate-500 font-bold uppercase text-[10px]">
+                                <tr>
+                                    <th class="p-3">Data</th>
+                                    <th class="p-3">OS</th>
+                                    <th class="p-3">Produto</th>
+                                    <th class="p-3">Valor</th>
+                                    <th class="p-3 text-center">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabela-historico" class="divide-y divide-slate-100">
+                                <tr><td colspan="5" class="p-4 text-center text-slate-400 text-xs">Carregando lançamentos...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
@@ -166,11 +198,15 @@
                                         <span id="badge-status" class="px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-500">CARREGANDO...</span>
                                     </div>
                                 </div>
-                                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                                    <div class="p-3 bg-slate-50 rounded-lg text-center"><p class="text-[10px] font-bold text-slate-400 uppercase">Dias Úteis</p><p id="dias-totais" class="text-lg font-bold">0</p></div>
-                                    <div class="p-3 bg-slate-50 rounded-lg text-center"><p class="text-[10px] font-bold text-slate-400 uppercase">Trabalhados</p><p id="dias-passados" class="text-lg font-bold text-blue-600">0</p></div>
-                                    <div class="p-3 bg-slate-50 rounded-lg text-center"><p class="text-[10px] font-bold text-slate-400 uppercase">Faltam</p><p id="dias-restantes" class="text-lg font-bold text-orange-600">0</p></div>
-                                    <div class="p-3 bg-slate-50 rounded-lg text-center"><p class="text-[10px] font-bold text-slate-400 uppercase">% Atingido</p><p id="perc-atingido" class="text-lg font-bold text-green-600">0%</p></div>
+                                <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-8">
+                                    <div class="p-2 bg-slate-50 rounded-lg text-center"><p class="text-[10px] font-bold text-slate-400 uppercase">Dias Úteis</p><p id="dias-totais" class="text-lg font-bold">0</p></div>
+                                    <div class="p-2 bg-slate-50 rounded-lg text-center"><p class="text-[10px] font-bold text-slate-400 uppercase">Trabalhados</p><p id="dias-passados" class="text-lg font-bold text-blue-600">0</p></div>
+                                    <div class="p-2 bg-slate-50 rounded-lg text-center"><p class="text-[10px] font-bold text-slate-400 uppercase">Faltam</p><p id="dias-restantes" class="text-lg font-bold text-orange-600">0</p></div>
+                                    <div class="p-2 bg-slate-50 rounded-lg text-center"><p class="text-[10px] font-bold text-slate-400 uppercase">% Atingido</p><p id="perc-atingido" class="text-lg font-bold text-green-600">0%</p></div>
+                                    <div class="p-2 bg-indigo-50 border border-indigo-100 rounded-lg text-center md:col-span-1 col-span-2">
+                                        <p class="text-[10px] font-bold text-indigo-500 uppercase">Meta P/ Dia</p>
+                                        <p id="meta-diaria-display" class="text-lg font-black text-indigo-700">R$ 0</p>
+                                    </div>
                                 </div>
                                 <div class="relative h-4 bg-slate-100 rounded-full overflow-hidden mb-2">
                                     <div id="barra-progresso" class="absolute top-0 left-0 h-full bg-blue-500 transition-all duration-700" style="width: 0%"></div>
@@ -193,8 +229,7 @@
                             <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white">✨</div>
                             <h3 class="font-bold text-indigo-900 italic">Análise Prime Wise</h3>
                         </div>
-                        <ul id="dicas-lista" class="space-y-3 text-sm text-indigo-800">
-                            </ul>
+                        <ul id="dicas-lista" class="space-y-3 text-sm text-indigo-800"></ul>
                     </div>
                 </div>
             </div>
@@ -235,32 +270,18 @@
                                 <div>
                                     <h4 class="text-sm font-bold text-slate-700 mb-3 border-b pb-1">Meta Principal</h4>
                                     <div class="space-y-3">
-                                        <div>
-                                            <label class="block text-[11px] font-semibold mb-1 text-slate-500">Valor da Meta (R$)</label>
-                                            <input type="text" id="gerente-meta-valor" required placeholder="R$ 40.000,00" class="w-full p-2 bg-white border border-slate-200 rounded-lg font-bold text-blue-700">
-                                        </div>
-                                        <div>
-                                            <label class="block text-[11px] font-semibold mb-1 text-slate-500">% Comissão Base</label>
-                                            <input type="number" step="0.1" id="gerente-meta-comissao" required placeholder="2.5" class="w-full p-2 bg-white border border-slate-200 rounded-lg">
-                                        </div>
+                                        <div><label class="block text-[11px] font-semibold mb-1">Valor da Meta (R$)</label><input type="text" id="gerente-meta-valor" required placeholder="R$ 40.000,00" class="w-full p-2 bg-white border border-slate-200 rounded-lg font-bold text-blue-700"></div>
+                                        <div><label class="block text-[11px] font-semibold mb-1">% Comissão Base</label><input type="number" step="0.1" id="gerente-meta-comissao" required placeholder="2.5" class="w-full p-2 bg-white border border-slate-200 rounded-lg"></div>
                                     </div>
                                 </div>
-                                
                                 <div>
                                     <h4 class="text-sm font-bold text-purple-700 mb-3 border-b border-purple-100 pb-1">Acelerador (Super Meta) - Opcional</h4>
                                     <div class="space-y-3">
-                                        <div>
-                                            <label class="block text-[11px] font-semibold mb-1 text-purple-600">Valor 2ª Meta (R$)</label>
-                                            <input type="text" id="gerente-meta-valor-2" placeholder="Ex: R$ 50.000,00" class="w-full p-2 bg-white border border-purple-200 rounded-lg font-bold text-purple-700">
-                                        </div>
-                                        <div>
-                                            <label class="block text-[11px] font-semibold mb-1 text-purple-600">% Comissão Acelerada</label>
-                                            <input type="number" step="0.1" id="gerente-meta-comissao-2" placeholder="Ex: 3.5" class="w-full p-2 bg-white border border-purple-200 rounded-lg">
-                                        </div>
+                                        <div><label class="block text-[11px] font-semibold mb-1 text-purple-600">Valor 2ª Meta (R$)</label><input type="text" id="gerente-meta-valor-2" placeholder="Ex: R$ 50.000,00" class="w-full p-2 bg-white border border-purple-200 rounded-lg font-bold text-purple-700"></div>
+                                        <div><label class="block text-[11px] font-semibold mb-1 text-purple-600">% Comissão Acelerada</label><input type="number" step="0.1" id="gerente-meta-comissao-2" placeholder="Ex: 3.5" class="w-full p-2 bg-white border border-purple-200 rounded-lg"></div>
                                     </div>
                                 </div>
                             </div>
-
                             <button type="submit" class="w-full md:w-auto bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition">Salvar Configuração do Vendedor</button>
                         </form>
                     </div>
@@ -278,11 +299,42 @@
                                         <th class="p-4">% Atingido</th>
                                     </tr>
                                 </thead>
-                                <tbody id="tabela-ranking" class="divide-y divide-slate-100">
-                                    </tbody>
+                                <tbody id="tabela-ranking" class="divide-y divide-slate-100"></tbody>
                             </table>
                         </div>
                     </div>
+
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 mt-6" data-html2canvas-ignore="true">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">📊 Raio-X de Performance Individual</h3>
+                        <p class="text-sm text-slate-500 mb-4">Selecione um vendedor da lista para analisar profundamente o desempenho dele no mês selecionado.</p>
+                        
+                        <div class="flex gap-4 mb-6">
+                            <select id="gerente-select-vendedor" class="w-full md:w-1/2 p-3 bg-slate-50 border border-slate-200 rounded-lg outline-none font-semibold text-slate-700 cursor-pointer">
+                                <option value="">Selecione um vendedor...</option>
+                                </select>
+                        </div>
+
+                        <div id="raio-x-panel" class="hidden space-y-6">
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100"><p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Meta do Mês</p><p id="rx-meta" class="font-bold text-lg text-slate-700">R$ 0,00</p></div>
+                                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100"><p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Realizado</p><p id="rx-realizado" class="font-bold text-lg text-green-600">R$ 0,00</p></div>
+                                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100"><p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Tendência Final</p><p id="rx-tendencia" class="font-bold text-lg text-blue-600">R$ 0,00</p></div>
+                                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100"><p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Comissão Prevista</p><p id="rx-comissao" class="font-bold text-lg text-purple-600">R$ 0,00</p></div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-100">
+                                <div>
+                                    <h4 class="text-sm font-bold text-slate-700 text-center mb-4">Evolução de Vendas e Comissão</h4>
+                                    <div class="relative w-full h-64"><canvas id="rx-chart-diario"></canvas></div>
+                                </div>
+                                <div>
+                                    <h4 class="text-sm font-bold text-slate-700 text-center mb-4">Média por Dia da Semana</h4>
+                                    <div class="relative w-full h-64"><canvas id="rx-chart-semana"></canvas></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div> 
             </div>
 
@@ -292,7 +344,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, where, getDocs, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, where, getDocs, doc, setDoc, getDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCF_5vgdURx3gtU3H3BIoXmVugx8oPjtLU",
@@ -307,7 +359,6 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // VARIÁVEIS MULTI-TENANT (Múltiplas Lojas)
         let usuarioAtual = null;
         let empresaAtualId = null; 
         let isGerente = false;
@@ -315,6 +366,12 @@
         let totalRealizado = 0;
         let vendasPorDia = {}; 
         let chartInstancia = null; 
+        let editandoVendaId = null;
+
+        // Variaveis globais para os graficos do Raio-X
+        let dadosGlobaisGerente = { metas: {}, vendas: [] };
+        let rxChartDiarioInst = null;
+        let rxChartSemanaInst = null;
 
         const FERIADOS = ["2026-01-01", "2026-04-03", "2026-04-21", "2026-05-01", "2026-09-07", "2026-10-11", "2026-10-12", "2026-11-02", "2026-11-15", "2026-11-20", "2026-12-25"];
 
@@ -324,13 +381,15 @@
             let result = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2 }).format(parseFloat(value) / 100);
             e.target.value = 'R$ ' + result;
         }
+        
+        // Aplica a mascara no formulário de Lançamento e no Gerente
+        document.getElementById('valor-venda').addEventListener('input', formatarMoeda);
         document.getElementById('gerente-meta-valor').addEventListener('input', formatarMoeda);
         document.getElementById('gerente-meta-valor-2').addEventListener('input', formatarMoeda);
 
-        document.getElementById('filtro-mes').addEventListener('change', carregarDados);
+        document.getElementById('filtro-mes').addEventListener('change', () => { carregarDados(); });
         document.getElementById('gerente-meta-mes').addEventListener('change', carregarDadosGerencia);
 
-        // LÓGICA DE LOGIN COM VERIFICAÇÃO DE EMPRESA
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 usuarioAtual = user;
@@ -338,7 +397,6 @@
                 document.getElementById('login-loader').style.display = 'block';
 
                 try {
-                    // Busca o perfil do usuário no Banco de Dados
                     const userDocRef = doc(db, "usuarios", user.uid);
                     const userDocSnap = await getDoc(userDocRef);
 
@@ -347,24 +405,24 @@
                         empresaAtualId = dadosPerfil.empresa_id;
                         isGerente = (dadosPerfil.papel === 'gerente' || dadosPerfil.papel === 'dono');
                         
-                        // Busca o Nome e a Logo da Empresa do usuário
                         const empresaDocRef = doc(db, "empresas", empresaAtualId);
                         const empresaDocSnap = await getDoc(empresaDocRef);
                         
                         if (empresaDocSnap.exists()) {
                             const dadosEmpresa = empresaDocSnap.data();
-                            // Injeta o nome da empresa na tela
                             document.getElementById('header-nome-empresa').innerText = dadosEmpresa.nome.toUpperCase();
                             document.getElementById('painel-nome-empresa').innerText = dadosEmpresa.nome;
                             
-                            // Se a empresa tiver cadastrado uma logo, substitui na tela
                             if(dadosEmpresa.logo_url) {
                                 document.getElementById('header-logo-empresa').src = dadosEmpresa.logo_url;
                                 document.getElementById('header-logo-empresa').classList.remove('hidden');
+                                document.getElementById('logo-fallback').classList.add('hidden');
+                            } else {
+                                document.getElementById('header-logo-empresa').classList.add('hidden');
+                                document.getElementById('logo-fallback').classList.remove('hidden');
                             }
                         }
 
-                        // Configura Interface
                         if (isGerente) document.getElementById('btn-tab-gerente').classList.remove('hidden');
                         else document.getElementById('btn-tab-gerente').classList.add('hidden');
 
@@ -379,7 +437,6 @@
                         
                         carregarDados();
                     } else {
-                        // Usuário existe no Auth mas não tem empresa vinculada no banco
                         document.getElementById('login-auth-error').classList.remove('hidden');
                         document.getElementById('login-text').classList.remove('hidden');
                         document.getElementById('login-loader').style.display = 'none';
@@ -390,7 +447,6 @@
                     signOut(auth);
                 }
             } else {
-                // Logout / Reset total
                 usuarioAtual = null; empresaAtualId = null; isGerente = false;
                 document.getElementById('login-screen').classList.remove('hidden');
                 document.getElementById('dashboard').classList.add('hidden');
@@ -435,80 +491,165 @@
         document.getElementById('btn-tab-apuracao').addEventListener('click', () => ativarAba('aba-apuracao'));
         document.getElementById('btn-tab-gerente').addEventListener('click', () => ativarAba('aba-gerente'));
 
+        document.getElementById('btn-cancelar-edicao').addEventListener('click', () => { resetarFormularioVenda(); });
+
+        function resetarFormularioVenda() {
+            editandoVendaId = null;
+            document.getElementById('titulo-form-venda').innerText = "Lançar Vendas do Dia";
+            document.getElementById('salvar-text').innerText = "Registrar Lançamento";
+            document.getElementById('btn-cancelar-edicao').classList.add('hidden');
+            
+            document.getElementById('valor-venda').value = '';
+            document.getElementById('produto-venda').value = '';
+            document.getElementById('os-venda').value = '';
+            document.getElementById('data-venda').valueAsDate = new Date();
+        }
+
+        // SALVAR VENDA (Agora tratando a string R$ para Float)
         document.getElementById('form-venda').addEventListener('submit', async (e) => {
             e.preventDefault();
             if(!usuarioAtual || !empresaAtualId) return;
 
             const data = document.getElementById('data-venda').value;
-            const valor = parseFloat(document.getElementById('valor-venda').value);
             const produto = document.getElementById('produto-venda').value;
+            const os = document.getElementById('os-venda').value; 
             const mes_ano = data.substring(0, 7); 
+            
+            // Tratamento do valor monetário mascarado
+            const valorTexto = document.getElementById('valor-venda').value.replace(/\D/g, '');
+            const valor = valorTexto ? parseFloat(valorTexto) / 100 : 0;
+
+            if(valor <= 0) { alert("Digite um valor válido."); return; }
 
             document.getElementById('salvar-text').classList.add('hidden');
             document.getElementById('salvar-loader').style.display = 'block';
 
             try {
-                // TODA VENDA AGORA RECEBE O CARIMBO DA EMPRESA
-                await addDoc(collection(db, "vendas_diarias"), {
-                    empresa_id: empresaAtualId, // O SEGREDO DO MULTI-TENANT
-                    usuario_id: usuarioAtual.uid, 
-                    usuario_email: usuarioAtual.email.toLowerCase(), 
-                    data_venda: data,
-                    mes_ano: mes_ano,
-                    valor: valor,
-                    produto_destaque: produto,
-                    timestamp: new Date()
-                });
-                alert("Venda salva com sucesso!");
-                document.getElementById('valor-venda').value = '';
-                document.getElementById('produto-venda').value = '';
-                if (!document.getElementById('aba-apuracao').classList.contains('hidden')) { carregarDados(); }
-            } catch (error) { console.error("Erro:", error); } 
-            finally { document.getElementById('salvar-text').classList.remove('hidden'); document.getElementById('salvar-loader').style.display = 'none'; }
+                if(editandoVendaId) {
+                    await updateDoc(doc(db, "vendas_diarias", editandoVendaId), {
+                        data_venda: data, mes_ano: mes_ano, valor: valor, produto_destaque: produto, os: os
+                    });
+                    alert("Lançamento corrigido com sucesso!");
+                } else {
+                    await addDoc(collection(db, "vendas_diarias"), {
+                        empresa_id: empresaAtualId, usuario_id: usuarioAtual.uid, usuario_email: usuarioAtual.email.toLowerCase(), 
+                        data_venda: data, mes_ano: mes_ano, valor: valor, produto_destaque: produto, os: os, timestamp: new Date()
+                    });
+                    alert("Venda salva com sucesso!");
+                }
+                
+                resetarFormularioVenda();
+                carregarDados(); 
+            } catch (error) { 
+                console.error("Erro:", error); alert("Erro ao salvar lançamento.");
+            } finally { document.getElementById('salvar-text').classList.remove('hidden'); document.getElementById('salvar-loader').style.display = 'none'; }
         });
 
         document.getElementById('form-meta-gerente').addEventListener('submit', async (e) => {
             e.preventDefault();
             if(!empresaAtualId) return;
-
             const mes = document.getElementById('gerente-meta-mes').value;
             const emailVendedor = document.getElementById('gerente-meta-email').value.toLowerCase().trim();
-            
             const valorTexto = document.getElementById('gerente-meta-valor').value.replace(/\D/g, '');
             const valorMeta = valorTexto ? parseFloat(valorTexto) / 100 : 0;
             const comissao = parseFloat(document.getElementById('gerente-meta-comissao').value) || 0;
-
             const valorTexto2 = document.getElementById('gerente-meta-valor-2').value.replace(/\D/g, '');
             const valorMeta2 = valorTexto2 ? parseFloat(valorTexto2) / 100 : 0;
             const comissao2 = parseFloat(document.getElementById('gerente-meta-comissao-2').value) || 0;
 
             try {
-                // A META AGORA É SALVA COM A CHAVE DA EMPRESA PARA NÃO MISTURAR E-MAILS IGUAIS EM LOJAS DIFERENTES
                 await setDoc(doc(db, "metas_mensais", `${empresaAtualId}_${emailVendedor}_${mes}`), {
-                    empresa_id: empresaAtualId,
-                    usuario_email: emailVendedor,
-                    mes_ano: mes,
-                    meta_valor: valorMeta,
-                    comissao_taxa: comissao,
-                    meta_valor_2: valorMeta2,
-                    comissao_taxa_2: comissao2,
-                    ultima_atualizacao: new Date(),
-                    atualizado_por: usuarioAtual.email
+                    empresa_id: empresaAtualId, usuario_email: emailVendedor, mes_ano: mes,
+                    meta_valor: valorMeta, comissao_taxa: comissao, meta_valor_2: valorMeta2, comissao_taxa_2: comissao2,
+                    ultima_atualizacao: new Date(), atualizado_por: usuarioAtual.email
                 }, { merge: true });
                 
                 alert(`Metas salvas com sucesso para ${emailVendedor}!`);
                 document.getElementById('gerente-meta-valor').value = ''; document.getElementById('gerente-meta-comissao').value = '';
                 document.getElementById('gerente-meta-valor-2').value = ''; document.getElementById('gerente-meta-comissao-2').value = '';
-                
                 carregarDadosGerencia();
             } catch (error) { alert("Erro ao salvar."); }
         });
+
+        // EDITAR VENDA (Trazendo o valor de volta com a máscara)
+        window.editarVendaHistorico = function(id, data, valorFloat, produto, os) {
+            editandoVendaId = id;
+            document.getElementById('data-venda').value = data;
+            document.getElementById('produto-venda').value = produto === '-' ? '' : produto;
+            document.getElementById('os-venda').value = os === '-' ? '' : os;
+            
+            // Aplica mascara no valor resgatado
+            let vFormat = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2 }).format(valorFloat);
+            document.getElementById('valor-venda').value = 'R$ ' + vFormat;
+
+            document.getElementById('titulo-form-venda').innerText = "✏️ Corrigir Lançamento";
+            document.getElementById('salvar-text').innerText = "Salvar Correção";
+            document.getElementById('btn-cancelar-edicao').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        window.excluirVendaHistorico = async function(id) {
+            if(confirm("ATENÇÃO: Tem certeza que deseja excluir permanentemente este lançamento?")) {
+                try {
+                    await deleteDoc(doc(db, "vendas_diarias", id));
+                    alert("Lançamento excluído com sucesso!");
+                    carregarDados(); 
+                } catch(e) { alert("Erro ao excluir lançamento."); }
+            }
+        };
+
+        async function carregarHistoricoLançamentos(mesAnoFiltro) {
+            const corpoTabela = document.getElementById('tabela-historico');
+            const [anoStr, mesStr] = mesAnoFiltro.split('-');
+            document.getElementById('label-mes-historico').innerText = `${mesStr}/${anoStr}`;
+
+            try {
+                const q = query(collection(db, "vendas_diarias"), 
+                    where("empresa_id", "==", empresaAtualId), 
+                    where("usuario_id", "==", usuarioAtual.uid), 
+                    where("mes_ano", "==", mesAnoFiltro)
+                );
+                const querySnapshot = await getDocs(q);
+                
+                let vendas = [];
+                querySnapshot.forEach((doc) => { vendas.push({ id: doc.id, ...doc.data() }); });
+                vendas.sort((a, b) => new Date(b.data_venda) - new Date(a.data_venda));
+
+                if(vendas.length === 0) {
+                    corpoTabela.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400 text-xs font-semibold">Nenhum lançamento registrado em ${mesStr}/${anoStr}.</td></tr>`;
+                    return;
+                }
+
+                let html = '';
+                vendas.forEach(v => {
+                    let osTexto = v.os || '-'; let prodTexto = v.produto_destaque || '-';
+                    let valFormatado = v.valor.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+                    let prodSafe = prodTexto.replace(/'/g, "\\'"); let osSafe = osTexto.replace(/'/g, "\\'");
+
+                    html += `
+                        <tr class="hover:bg-slate-50 border-b border-slate-50 last:border-0 transition">
+                            <td class="p-3 text-slate-600 font-medium">${v.data_venda.split('-').reverse().join('/')}</td>
+                            <td class="p-3 font-semibold text-slate-700">${osTexto}</td>
+                            <td class="p-3 text-slate-500 truncate max-w-[100px]">${prodTexto}</td>
+                            <td class="p-3 font-bold text-green-600">${valFormatado}</td>
+                            <td class="p-3 text-center flex justify-center gap-2">
+                                <button onclick="editarVendaHistorico('${v.id}', '${v.data_venda}', ${v.valor}, '${prodSafe}', '${osSafe}')" class="text-blue-500 hover:bg-blue-100 p-1.5 rounded-md transition" title="Editar">✏️</button>
+                                <button onclick="excluirVendaHistorico('${v.id}')" class="text-red-500 hover:bg-red-100 p-1.5 rounded-md transition" title="Excluir">🗑️</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                corpoTabela.innerHTML = html;
+            } catch (error) { corpoTabela.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-red-500 text-xs font-bold">Erro ao puxar dados.</td></tr>`; }
+        }
 
         async function carregarDados() {
             if(!usuarioAtual || !empresaAtualId) return;
             const mesAnoFiltro = document.getElementById('filtro-mes').value;
             if(!mesAnoFiltro) return;
             
+            carregarHistoricoLançamentos(mesAnoFiltro);
+
             let dadosMeta = null;
             try {
                 const configRef = doc(db, "metas_mensais", `${empresaAtualId}_${usuarioAtual.email.toLowerCase()}_${mesAnoFiltro}`);
@@ -531,12 +672,7 @@
             }
 
             try {
-                // FILTRA APENAS VENDAS DAQUELA EMPRESA
-                const q = query(collection(db, "vendas_diarias"), 
-                    where("empresa_id", "==", empresaAtualId), 
-                    where("usuario_id", "==", usuarioAtual.uid), 
-                    where("mes_ano", "==", mesAnoFiltro)
-                );
+                const q = query(collection(db, "vendas_diarias"), where("empresa_id", "==", empresaAtualId), where("usuario_id", "==", usuarioAtual.uid), where("mes_ano", "==", mesAnoFiltro));
                 const querySnapshot = await getDocs(q);
                 let somaMensal = 0; vendasPorDia = {}; 
                 querySnapshot.forEach((doc) => {
@@ -550,47 +686,56 @@
             } catch (error) { calcularDashboard(mesAnoFiltro); }
         }
 
+        // CARREGA DADOS DO GERENTE E PREPARA O RAIO-X
         async function carregarDadosGerencia() {
             if(!isGerente || !empresaAtualId) return;
             const mesAtualFormatado = document.getElementById('gerente-meta-mes').value;
             if(!mesAtualFormatado) return;
             
+            // Zera o cache global
+            dadosGlobaisGerente = { metas: {}, vendas: [] };
+            document.getElementById('raio-x-panel').classList.add('hidden');
+            
             try {
-                // PUXA APENAS VENDAS DA EMPRESA DELE
-                const qVendas = query(collection(db, "vendas_diarias"), 
-                    where("empresa_id", "==", empresaAtualId), 
-                    where("mes_ano", "==", mesAtualFormatado)
-                );
+                const qVendas = query(collection(db, "vendas_diarias"), where("empresa_id", "==", empresaAtualId), where("mes_ano", "==", mesAtualFormatado));
                 const snapVendas = await getDocs(qVendas);
                 let ranking = {}; let somaLoja = 0;
                 
                 snapVendas.forEach((doc) => {
-                    let val = doc.data().valor;
-                    let email = doc.data().usuario_email || "Vendedor Anônimo"; 
+                    let d = doc.data();
+                    let val = d.valor;
+                    let email = d.usuario_email || "Vendedor Anônimo"; 
                     somaLoja += val;
                     if(!ranking[email]) ranking[email] = { real: 0, meta: 0 };
                     ranking[email].real += val;
+                    
+                    // Salva venda no Cache Global para o Raio-X
+                    dadosGlobaisGerente.vendas.push(d);
                 });
                 document.getElementById('gerente-total-loja').innerText = somaLoja.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
                 
-                const qMetas = query(collection(db, "metas_mensais"), 
-                    where("empresa_id", "==", empresaAtualId), 
-                    where("mes_ano", "==", mesAtualFormatado)
-                );
+                const qMetas = query(collection(db, "metas_mensais"), where("empresa_id", "==", empresaAtualId), where("mes_ano", "==", mesAtualFormatado));
                 const snapMetas = await getDocs(qMetas);
                 
                 snapMetas.forEach((doc) => {
-                    let email = doc.data().usuario_email;
+                    let d = doc.data();
+                    let email = d.usuario_email;
                     if(!ranking[email]) ranking[email] = { real: 0, meta: 0 };
-                    ranking[email].meta = doc.data().meta_valor;
+                    ranking[email].meta = d.meta_valor;
+                    
+                    // Salva meta no Cache Global para o Raio-X
+                    dadosGlobaisGerente.metas[email] = d;
                 });
 
                 const corpoTabela = document.getElementById('tabela-ranking');
                 corpoTabela.innerHTML = "";
                 
+                // Prepara Select do Raio-X
+                const selectRaioX = document.getElementById('gerente-select-vendedor');
+                selectRaioX.innerHTML = '<option value="">Selecione um vendedor...</option>';
+
                 const rankingOrdenado = Object.keys(ranking).map(email => {
-                    let obj = ranking[email];
-                    obj.email = email;
+                    let obj = ranking[email]; obj.email = email;
                     obj.perc = obj.meta > 0 ? (obj.real / obj.meta) * 100 : 0;
                     return obj;
                 }).sort((a, b) => b.real - a.real);
@@ -612,10 +757,92 @@
                             <td class="p-4 font-bold ${corPerc}">${vendedor.perc.toFixed(1)}%</td>
                         </tr>
                     `;
+                    
+                    // Preenche opções do Select
+                    selectRaioX.innerHTML += `<option value="${vendedor.email}">${vendedor.email} (${formataReal})</option>`;
                 });
 
             } catch (error) { console.error("Erro na gerência:", error); }
         }
+
+        // LÓGICA DO RAIO-X DO GERENTE
+        document.getElementById('gerente-select-vendedor').addEventListener('change', function() {
+            const email = this.value;
+            const panel = document.getElementById('raio-x-panel');
+            
+            if(!email) { panel.classList.add('hidden'); return; }
+            panel.classList.remove('hidden');
+
+            const mesAnoFiltro = document.getElementById('gerente-meta-mes').value;
+            const [anoString, mesString] = mesAnoFiltro.split('-');
+            const anoFiltro = parseInt(anoString); const mesFiltro = parseInt(mesString) - 1;
+            const hoje = new Date();
+            const isMesPassado = (anoFiltro < hoje.getFullYear() || (anoFiltro === hoje.getFullYear() && mesFiltro < hoje.getMonth()));
+            const dias = getDiasUteis(anoFiltro, mesFiltro);
+
+            // Resgata Dados do Cache
+            let confMeta = dadosGlobaisGerente.metas[email] || { meta_valor: 0, comissao_taxa: 0, meta_valor_2: 0, comissao_taxa_2: 0 };
+            let vendasUser = dadosGlobaisGerente.vendas.filter(v => v.usuario_email === email);
+            
+            let totalReal = 0;
+            let vendPorDia = {};
+            let forcaSemana = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 0: 0 }; // 0=Dom ... 6=Sab
+
+            vendasUser.forEach(v => {
+                totalReal += v.valor;
+                if(vendPorDia[v.data_venda]) vendPorDia[v.data_venda] += v.valor; else vendPorDia[v.data_venda] = v.valor;
+                // Calculo do dia da semana (T12 para evitar bug de fuso horário)
+                let dSemana = new Date(v.data_venda + 'T12:00:00').getDay(); 
+                forcaSemana[dSemana] += v.valor;
+            });
+
+            const tendencia = isMesPassado ? totalReal : (dias.passados > 0 ? (totalReal / dias.passados) * dias.totais : 0);
+            
+            // Taxa Ativa
+            let taxaCalc = confMeta.comissao_taxa;
+            if(confMeta.meta_valor_2 > 0 && tendencia >= confMeta.meta_valor_2) { taxaCalc = confMeta.comissao_taxa_2; }
+            const prevComissao = tendencia * (taxaCalc / 100);
+
+            // Atualiza UI do Raio-X
+            document.getElementById('rx-meta').innerText = confMeta.meta_valor.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+            document.getElementById('rx-realizado').innerText = totalReal.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+            document.getElementById('rx-tendencia').innerText = tendencia.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+            document.getElementById('rx-comissao').innerText = prevComissao.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+
+            // Gráfico 1: Evolução
+            const datasOrdenadas = Object.keys(vendPorDia).sort();
+            const labelsGraf1 = datasOrdenadas.map(d => { const p = d.split('-'); return `${p[2]}/${p[1]}`; });
+            const dadosGraf1 = datasOrdenadas.map(d => vendPorDia[d]);
+            const dadosComGraf1 = dadosGraf1.map(v => v * (taxaCalc / 100));
+
+            if(rxChartDiarioInst) rxChartDiarioInst.destroy();
+            rxChartDiarioInst = new Chart(document.getElementById('rx-chart-diario').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: labelsGraf1,
+                    datasets: [
+                        { label: 'Vendas (R$)', data: dadosGraf1, backgroundColor: 'rgba(59, 130, 246, 0.8)', borderRadius: 2, yAxisID: 'y' },
+                        { label: 'Comissão', data: dadosComGraf1, type: 'line', borderColor: 'rgba(147, 51, 234, 1)', borderWidth: 2, tension: 0.2, yAxisID: 'y1' }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y1: { position: 'right', grid: { drawOnChartArea: false } } } }
+            });
+
+            // Gráfico 2: Força da Semana
+            const labelsSemana = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+            const dadosSemana = [forcaSemana[1], forcaSemana[2], forcaSemana[3], forcaSemana[4], forcaSemana[5], forcaSemana[6], forcaSemana[0]];
+
+            if(rxChartSemanaInst) rxChartSemanaInst.destroy();
+            rxChartSemanaInst = new Chart(document.getElementById('rx-chart-semana').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: labelsSemana,
+                    datasets: [{ label: 'Acumulado no Mês (R$)', data: dadosSemana, backgroundColor: 'rgba(245, 158, 11, 0.8)', borderRadius: 4 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        });
+
 
         document.getElementById('btn-recalcular').addEventListener('click', async () => {
             document.getElementById('btn-recalcular-text').classList.add('hidden');
@@ -640,6 +867,7 @@
             return { totais, passados };
         }
 
+        // CALCULO DO DASHBOARD DO VENDEDOR (Agora com Meta Diária Dinâmica)
         function calcularDashboard(mesAnoFiltro) {
             if(!mesAnoFiltro) return;
             const [anoString, mesString] = mesAnoFiltro.split('-');
@@ -660,10 +888,29 @@
             const tendencia = isMesPassado ? real : (dias.passados > 0 ? (real / dias.passados) * dias.totais : 0);
             const perc = meta > 0 ? (real / meta) * 100 : 0;
 
-            let taxaAtivaReal = taxaComissao;
-            let taxaAtivaProj = taxaComissao;
-            let hitSuperReal = false;
-            let hitSuperProj = false;
+            // NOVO: Cálculo da Meta Diária (Dinâmica)
+            let metaDiariaAjustada = 0;
+            let diasRestantes = dias.totais - dias.passados;
+            
+            if (!isMesPassado && meta > 0) {
+                if (real >= meta) {
+                    document.getElementById('meta-diaria-display').innerText = "ATINGIDA!";
+                    document.getElementById('meta-diaria-display').className = "text-sm mt-1 font-black text-green-600 uppercase";
+                } else if (diasRestantes > 0) {
+                    metaDiariaAjustada = (meta - real) / diasRestantes;
+                    document.getElementById('meta-diaria-display').innerText = metaDiariaAjustada.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+                    document.getElementById('meta-diaria-display').className = "text-lg font-black text-indigo-700";
+                } else {
+                    // Último dia do mês ou dias estourados
+                    metaDiariaAjustada = meta - real;
+                    document.getElementById('meta-diaria-display').innerText = metaDiariaAjustada.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+                }
+            } else {
+                document.getElementById('meta-diaria-display').innerText = "-";
+            }
+
+            let taxaAtivaReal = taxaComissao; let taxaAtivaProj = taxaComissao;
+            let hitSuperReal = false; let hitSuperProj = false;
 
             if (meta2 > 0 && real >= meta2) { taxaAtivaReal = taxaComissao2; hitSuperReal = true; }
             if (meta2 > 0 && tendencia >= meta2) { taxaAtivaProj = taxaComissao2; hitSuperProj = true; }
@@ -684,7 +931,7 @@
             
             document.getElementById('dias-totais').innerText = dias.totais;
             document.getElementById('dias-passados').innerText = dias.passados;
-            document.getElementById('dias-restantes').innerText = dias.totais - dias.passados;
+            document.getElementById('dias-restantes').innerText = dias.restantes;
             document.getElementById('perc-atingido').innerText = Math.round(perc) + "%";
             document.getElementById('barra-progresso').style.width = Math.min(perc, 100) + "%";
 
