@@ -229,7 +229,8 @@
                             <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white">✨</div>
                             <h3 class="font-bold text-indigo-900 italic">Análise Prime Wise</h3>
                         </div>
-                        <ul id="dicas-lista" class="space-y-3 text-sm text-indigo-800"></ul>
+                        <ul id="dicas-lista" class="space-y-3 text-sm text-indigo-800">
+                            </ul>
                     </div>
                 </div>
             </div>
@@ -368,7 +369,6 @@
         let chartInstancia = null; 
         let editandoVendaId = null;
 
-        // Variaveis globais para os graficos do Raio-X
         let dadosGlobaisGerente = { metas: {}, vendas: [] };
         let rxChartDiarioInst = null;
         let rxChartSemanaInst = null;
@@ -382,7 +382,6 @@
             e.target.value = 'R$ ' + result;
         }
         
-        // Aplica a mascara no formulário de Lançamento e no Gerente
         document.getElementById('valor-venda').addEventListener('input', formatarMoeda);
         document.getElementById('gerente-meta-valor').addEventListener('input', formatarMoeda);
         document.getElementById('gerente-meta-valor-2').addEventListener('input', formatarMoeda);
@@ -505,7 +504,6 @@
             document.getElementById('data-venda').valueAsDate = new Date();
         }
 
-        // SALVAR VENDA (Agora tratando a string R$ para Float)
         document.getElementById('form-venda').addEventListener('submit', async (e) => {
             e.preventDefault();
             if(!usuarioAtual || !empresaAtualId) return;
@@ -515,7 +513,6 @@
             const os = document.getElementById('os-venda').value; 
             const mes_ano = data.substring(0, 7); 
             
-            // Tratamento do valor monetário mascarado
             const valorTexto = document.getElementById('valor-venda').value.replace(/\D/g, '');
             const valor = valorTexto ? parseFloat(valorTexto) / 100 : 0;
 
@@ -571,14 +568,12 @@
             } catch (error) { alert("Erro ao salvar."); }
         });
 
-        // EDITAR VENDA (Trazendo o valor de volta com a máscara)
         window.editarVendaHistorico = function(id, data, valorFloat, produto, os) {
             editandoVendaId = id;
             document.getElementById('data-venda').value = data;
             document.getElementById('produto-venda').value = produto === '-' ? '' : produto;
             document.getElementById('os-venda').value = os === '-' ? '' : os;
             
-            // Aplica mascara no valor resgatado
             let vFormat = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2 }).format(valorFloat);
             document.getElementById('valor-venda').value = 'R$ ' + vFormat;
 
@@ -686,13 +681,11 @@
             } catch (error) { calcularDashboard(mesAnoFiltro); }
         }
 
-        // CARREGA DADOS DO GERENTE E PREPARA O RAIO-X
         async function carregarDadosGerencia() {
             if(!isGerente || !empresaAtualId) return;
             const mesAtualFormatado = document.getElementById('gerente-meta-mes').value;
             if(!mesAtualFormatado) return;
             
-            // Zera o cache global
             dadosGlobaisGerente = { metas: {}, vendas: [] };
             document.getElementById('raio-x-panel').classList.add('hidden');
             
@@ -708,8 +701,6 @@
                     somaLoja += val;
                     if(!ranking[email]) ranking[email] = { real: 0, meta: 0 };
                     ranking[email].real += val;
-                    
-                    // Salva venda no Cache Global para o Raio-X
                     dadosGlobaisGerente.vendas.push(d);
                 });
                 document.getElementById('gerente-total-loja').innerText = somaLoja.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
@@ -722,15 +713,12 @@
                     let email = d.usuario_email;
                     if(!ranking[email]) ranking[email] = { real: 0, meta: 0 };
                     ranking[email].meta = d.meta_valor;
-                    
-                    // Salva meta no Cache Global para o Raio-X
                     dadosGlobaisGerente.metas[email] = d;
                 });
 
                 const corpoTabela = document.getElementById('tabela-ranking');
                 corpoTabela.innerHTML = "";
                 
-                // Prepara Select do Raio-X
                 const selectRaioX = document.getElementById('gerente-select-vendedor');
                 selectRaioX.innerHTML = '<option value="">Selecione um vendedor...</option>';
 
@@ -757,15 +745,12 @@
                             <td class="p-4 font-bold ${corPerc}">${vendedor.perc.toFixed(1)}%</td>
                         </tr>
                     `;
-                    
-                    // Preenche opções do Select
                     selectRaioX.innerHTML += `<option value="${vendedor.email}">${vendedor.email} (${formataReal})</option>`;
                 });
 
             } catch (error) { console.error("Erro na gerência:", error); }
         }
 
-        // LÓGICA DO RAIO-X DO GERENTE
         document.getElementById('gerente-select-vendedor').addEventListener('change', function() {
             const email = this.value;
             const panel = document.getElementById('raio-x-panel');
@@ -780,36 +765,31 @@
             const isMesPassado = (anoFiltro < hoje.getFullYear() || (anoFiltro === hoje.getFullYear() && mesFiltro < hoje.getMonth()));
             const dias = getDiasUteis(anoFiltro, mesFiltro);
 
-            // Resgata Dados do Cache
             let confMeta = dadosGlobaisGerente.metas[email] || { meta_valor: 0, comissao_taxa: 0, meta_valor_2: 0, comissao_taxa_2: 0 };
             let vendasUser = dadosGlobaisGerente.vendas.filter(v => v.usuario_email === email);
             
             let totalReal = 0;
             let vendPorDia = {};
-            let forcaSemana = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 0: 0 }; // 0=Dom ... 6=Sab
+            let forcaSemana = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 0: 0 }; 
 
             vendasUser.forEach(v => {
                 totalReal += v.valor;
                 if(vendPorDia[v.data_venda]) vendPorDia[v.data_venda] += v.valor; else vendPorDia[v.data_venda] = v.valor;
-                // Calculo do dia da semana (T12 para evitar bug de fuso horário)
                 let dSemana = new Date(v.data_venda + 'T12:00:00').getDay(); 
                 forcaSemana[dSemana] += v.valor;
             });
 
             const tendencia = isMesPassado ? totalReal : (dias.passados > 0 ? (totalReal / dias.passados) * dias.totais : 0);
             
-            // Taxa Ativa
             let taxaCalc = confMeta.comissao_taxa;
             if(confMeta.meta_valor_2 > 0 && tendencia >= confMeta.meta_valor_2) { taxaCalc = confMeta.comissao_taxa_2; }
             const prevComissao = tendencia * (taxaCalc / 100);
 
-            // Atualiza UI do Raio-X
             document.getElementById('rx-meta').innerText = confMeta.meta_valor.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
             document.getElementById('rx-realizado').innerText = totalReal.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
             document.getElementById('rx-tendencia').innerText = tendencia.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
             document.getElementById('rx-comissao').innerText = prevComissao.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
 
-            // Gráfico 1: Evolução
             const datasOrdenadas = Object.keys(vendPorDia).sort();
             const labelsGraf1 = datasOrdenadas.map(d => { const p = d.split('-'); return `${p[2]}/${p[1]}`; });
             const dadosGraf1 = datasOrdenadas.map(d => vendPorDia[d]);
@@ -828,7 +808,6 @@
                 options: { responsive: true, maintainAspectRatio: false, scales: { y1: { position: 'right', grid: { drawOnChartArea: false } } } }
             });
 
-            // Gráfico 2: Força da Semana
             const labelsSemana = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
             const dadosSemana = [forcaSemana[1], forcaSemana[2], forcaSemana[3], forcaSemana[4], forcaSemana[5], forcaSemana[6], forcaSemana[0]];
 
@@ -867,7 +846,6 @@
             return { totais, passados };
         }
 
-        // CALCULO DO DASHBOARD DO VENDEDOR (Agora com Meta Diária Dinâmica)
         function calcularDashboard(mesAnoFiltro) {
             if(!mesAnoFiltro) return;
             const [anoString, mesString] = mesAnoFiltro.split('-');
@@ -888,9 +866,9 @@
             const tendencia = isMesPassado ? real : (dias.passados > 0 ? (real / dias.passados) * dias.totais : 0);
             const perc = meta > 0 ? (real / meta) * 100 : 0;
 
-            // NOVO: Cálculo da Meta Diária (Dinâmica)
-            let metaDiariaAjustada = 0;
+            // CÁLCULO DOS DIAS RESTANTES (CORREÇÃO APLICADA AQUI)
             let diasRestantes = dias.totais - dias.passados;
+            let metaDiariaAjustada = 0;
             
             if (!isMesPassado && meta > 0) {
                 if (real >= meta) {
@@ -901,7 +879,6 @@
                     document.getElementById('meta-diaria-display').innerText = metaDiariaAjustada.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
                     document.getElementById('meta-diaria-display').className = "text-lg font-black text-indigo-700";
                 } else {
-                    // Último dia do mês ou dias estourados
                     metaDiariaAjustada = meta - real;
                     document.getElementById('meta-diaria-display').innerText = metaDiariaAjustada.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
                 }
@@ -929,9 +906,11 @@
             document.getElementById('res-comissao-proj').innerText = comissaoProj.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
             document.getElementById('res-comissao-real').innerText = comissaoReal.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
             
+            // INJEÇÃO NA TELA
             document.getElementById('dias-totais').innerText = dias.totais;
             document.getElementById('dias-passados').innerText = dias.passados;
-            document.getElementById('dias-restantes').innerText = dias.restantes;
+            // CORREÇÃO DO BUG: Chamando a variável criada acima, em vez da propriedade inexistente 'dias.restantes'
+            document.getElementById('dias-restantes').innerText = diasRestantes; 
             document.getElementById('perc-atingido').innerText = Math.round(perc) + "%";
             document.getElementById('barra-progresso').style.width = Math.min(perc, 100) + "%";
 
